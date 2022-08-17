@@ -9,7 +9,7 @@ interface Props {
 
 const DashboardLayout = ({ children }: Props) => {
   const bg = useColorModeValue('linear(blue.500 40%, white 40%)', 'gray.900');
-
+  
   return (
     <Flex bg={bg} bgGradient={bg} flexDir={{base: 'column', md: 'row'}}>
       <SideNav />

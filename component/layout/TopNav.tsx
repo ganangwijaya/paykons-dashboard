@@ -2,7 +2,9 @@ import { Box, Button, Flex, Heading, Menu, MenuButton, MenuList, MenuItem, MenuD
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink } from '@chakra-ui/react'
 import { useColorMode } from "@chakra-ui/react"
 import { css } from '@emotion/react';
+import { useRouter } from "next/router";
 import { useEffect, useState } from "react"
+import { DashboardMenu, PaymentMenu, PreferenceMenu } from "../../data/PageData";
 
 const GlassNav = css`
   background: rgba( 0, 0, 0, 0.3 );
@@ -34,6 +36,7 @@ const NormalNav = css`
 const TopNav = () => {
   const { colorMode, toggleColorMode } = useColorMode()
   const [header, setHeader] = useState(false);
+  const router = useRouter();
 
   const listenScrollEvent = (event: any) => {
     if (window.scrollY < 23) {
@@ -56,10 +59,22 @@ const TopNav = () => {
             <BreadcrumbLink>Page</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbItem isCurrentPage>
-            <BreadcrumbLink>Dashboard</BreadcrumbLink>
+            <BreadcrumbLink>
+              {
+                router.pathname == DashboardMenu.path ? DashboardMenu.title :
+                  PaymentMenu.filter(f => router.pathname == f.path).length > 0 ? PaymentMenu.filter(f => router.pathname == f.path)[0].title :
+                    PreferenceMenu.filter(f => router.pathname == f.path).length > 0 ? PreferenceMenu.filter(f => router.pathname == f.path)[0].title : ''
+              }
+            </BreadcrumbLink>
           </BreadcrumbItem>
         </Breadcrumb>
-        <Heading as={'h2'} size={'md'}>Main Dashboard</Heading>
+        <Heading as={'h2'} size={'md'}>
+          {
+            router.pathname == DashboardMenu.path ? DashboardMenu.title :
+              PaymentMenu.filter(f => router.pathname == f.path).length > 0 ? PaymentMenu.filter(f => router.pathname == f.path)[0].title :
+                PreferenceMenu.filter(f => router.pathname == f.path).length > 0 ? PreferenceMenu.filter(f => router.pathname == f.path)[0].title : ''
+          }
+        </Heading>
       </Box>
       <Flex gap={3} alignItems={'center'}>
         <Button onClick={toggleColorMode} size={'xs'} variant={'unstyled'}><i className="ri-sun-line"></i></Button>

@@ -3,6 +3,7 @@ import { useDisclosure, useColorModeValue } from "@chakra-ui/react"
 import Link from "next/link"
 import { useRouter } from 'next/router'
 import { motion, AnimatePresence } from "framer-motion";
+import { DashboardMenu, PaymentMenu, PreferenceMenu } from "../../data/PageData";
 
 interface NavItemProps {
   icon: string,
@@ -111,7 +112,7 @@ const SideNav = () => {
             </motion.div>
           </Heading>
           <Stack mt={8} gap={3}>
-            <NavItem isOpen={isOpen} icon={'ri-dashboard-fill'} text={'Dashboard'} url={'/dashboard'} />
+            <NavItem isOpen={isOpen} icon={DashboardMenu.icon} text={DashboardMenu.title} url={DashboardMenu.path} />
             <motion.div
               animate={isOpen ? "open" : "collapsed"}
               exit="collapsed"
@@ -128,12 +129,9 @@ const SideNav = () => {
               <Heading as={'h4'} size={'xs'}>Payment</Heading>
             </motion.div>
             <Stack>
-              <NavItem isOpen={isOpen} icon={'ri-exchange-fill'} text={'Transaction'} url={'/'} />
-              <NavItem isOpen={isOpen} icon={'ri-team-fill'} text={'Member'} url={'/'} />
-              <NavItem isOpen={isOpen} icon={'ri-bank-card-line'} text={'Payout'} url={'/'} />
-              <NavItem isOpen={isOpen} icon={'ri-scales-line'} text={'Balances'} url={'/'} />
-              <NavItem isOpen={isOpen} icon={'ri-check-double-line'} text={'Subcription'} url={'/'} />
-              <NavItem isOpen={isOpen} icon={'ri-list-check-2'} text={'Payment Plans'} url={'/'} />
+              {PaymentMenu.map((menu, index) => (
+                <NavItem key={index} isOpen={isOpen} icon={menu.icon} text={menu.title} url={menu.path} />
+              ))}
             </Stack>
             <motion.div
               animate={isOpen ? "open" : "collapsed"}
@@ -151,8 +149,9 @@ const SideNav = () => {
               <Heading as={'h4'} size={'xs'}>Preference</Heading>
             </motion.div>
             <Stack>
-              <NavItem isOpen={isOpen} icon={'ri-eye-fill'} text={'Audit Logs'} url={'/'} />
-              <NavItem isOpen={isOpen} icon={'ri-settings-3-fill'} text={'Settings'} url={'/'} />
+              {PreferenceMenu.map((menu, index) => (
+                <NavItem key={index} isOpen={isOpen} icon={menu.icon} text={menu.title} url={menu.path} />
+              ))}
             </Stack>
           </Stack>
         </Box>
