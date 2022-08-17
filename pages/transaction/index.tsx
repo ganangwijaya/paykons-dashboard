@@ -31,6 +31,11 @@ const TransactionPage = () => {
   const columnHelper = createColumnHelper<DataState>();
 
   const columns = [
+    columnHelper.accessor('id', {
+      enableColumnFilter: false,
+      enableSorting: true,
+      cell: i => i.getValue()
+    }),
     columnHelper.accessor('name', {
       cell: i => i.getValue()
     }),
@@ -49,8 +54,9 @@ const TransactionPage = () => {
         <Badge colorScheme={i.getValue() == 'confirmed' ? 'green' : 'red'} fontSize={10}>{i.getValue()}</Badge>
       )
     }),
-    columnHelper.accessor('id', {
+    columnHelper.display({
       header: '',
+      id: 'action',
       enableSorting: false,
       cell: i => (
         <Menu>
@@ -102,15 +108,22 @@ const TransactionPage = () => {
                                 h.getContext()
                               )}
                               <chakra.span
+                                color={h.column.getIsSorted() ? 'blue.300' : 'gray.400'}
                                 {...{ onClick: h.column.getToggleSortingHandler() }}
                                 cursor={h.column.getCanSort() ? 'pointer' : 'default'}
                                 visibility={String(h.column.getIsSorted()) == "false" ? 'hidden' : 'visible'}
                                 _groupHover={{ visibility: h.column.getCanSort() ? 'visible' : 'hidden' }}
                                 className={String(h.column.getIsSorted()) == "false" ? 'ri-sort-asc' : String(h.column.getIsSorted()) == 'asc' ? 'ri-sort-asc' : 'ri-sort-desc'}>
                               </chakra.span>
+                              <chakra.span
+                                color={'blue.300'}
+                                display={h.column.getIsFiltered() ? 'block' : 'none'}
+                                className="ri-filter-2-fill"
+                              >
+                              </chakra.span>
                             </Flex>
                             <Menu closeOnSelect={false}>
-                              <MenuButton visibility={'hidden'} _groupHover={{ visibility: 'visible' }} as={IconButton} w={4} h={4} variant={'ghost'} fontSize={12} size={'xs'} icon={<i className="ri-more-2-fill"></i>} />
+                              {(h.column.getCanSort() || h.column.getCanFilter()) && <MenuButton visibility={'hidden'} _groupHover={{ visibility: 'visible' }} as={IconButton} w={4} h={4} variant={'ghost'} fontSize={12} size={'xs'} icon={<i className="ri-more-2-fill"></i>} />}
                               <MenuList fontSize={'xs'}>
                                 {h.column.columnDef.header == 'Datetime' ?
                                   <MenuOptionGroup textTransform={'capitalize'} fontSize={12} defaultValue='month' title='Filter By' type={'radio'}>
@@ -121,16 +134,17 @@ const TransactionPage = () => {
                                       <Filter column={h.column} table={table} />
                                       {/* {h.column.getFilterValue()} */}
                                     </Box>
+                                    {columnFilters.length > 0 && <MenuItemOption onClick={() => setColumnFilters([])} icon={<i className="ri-format-clear"></i>}>Clear Filter</MenuItemOption>}
                                   </MenuOptionGroup>
                                   :
-                                  <MenuOptionGroup textTransform={'capitalize'} fontSize={12} defaultValue='month' title='Filter by Input' type={'checkbox'}>
+                                  <MenuOptionGroup textTransform={'capitalize'} fontSize={12} defaultValue='month' title='Filter by Input'>
                                     <Box p={2} ml={2}>
                                       <Filter column={h.column} table={table} />
                                       {/* {h.column.getFilterValue()} */}
                                     </Box>
+                                    {columnFilters.length > 0 && <MenuItemOption onClick={() => setColumnFilters([])} icon={<i className="ri-format-clear"></i>}>Clear Filter</MenuItemOption>}
                                   </MenuOptionGroup>
                                 }
-
                                 <MenuDivider />
                                 <MenuOptionGroup textTransform={'capitalize'} fontSize={12} value={sorting.length == 0 ? 'none' : sorting[0].desc == false && h.column.getIsSorted() ? 'asc' : h.column.getIsSorted() ? 'desc' : 'none'} title='Sort By' type={'radio'}>
                                   <MenuItemOption onClick={() => setSorting([])} value='none'>None</MenuItemOption>
@@ -328,7 +342,7 @@ const DebouncedInput = ({ value: initialValue, onChange, debounce = 500, ...prop
       <InputLeftElement
         fontSize={8}
         pointerEvents='none'
-        children={<i className="ri-filter-3-line"></i>}
+        children={<i className="ri-filter-2-fill"></i>}
       />
       <Input {...props} size={'xs'} rounded={'md'} value={value} onChange={e => setValue(e.target.value)} />
     </InputGroup>
