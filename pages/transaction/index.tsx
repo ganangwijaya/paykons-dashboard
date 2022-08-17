@@ -192,7 +192,7 @@ const TransactionPage = () => {
                     </option>
                   ))}
                 </Select>
-                <Text whiteSpace={'nowrap'} fontSize={'sm'}>of {data.length} row</Text>
+                <Text whiteSpace={'nowrap'} fontSize={'sm'}>of {table.getRowModel().rows.length} row</Text>
               </Flex>
             </Flex>
           </Box>
