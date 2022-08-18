@@ -19,6 +19,14 @@ const theme = extendTheme({
         fontWeight: 'bold',
       }
     },
+    Modal: {
+      baseStyle: {
+        overlay: {
+          bg: 'blackAlpha.700',
+          backdropFilter: 'blur(5px)',
+        }
+      }
+    }
   },
   colors: {
     blue: {

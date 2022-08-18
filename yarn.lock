@@ -1816,6 +1816,11 @@
   dependencies:
     "tslib" "^2.0.3"
 
+"focus-visible@^5.2.0":
+  "integrity" "sha512-Rwix9pBtC1Nuy5wysTmKy+UjbDJpIfg8eHjw0rjZ1mX4GNLz1Bmd16uDpI3Gk1i70Fgcs8Csg2lPm8HULFg9DQ=="
+  "resolved" "https://registry.npmjs.org/focus-visible/-/focus-visible-5.2.0.tgz"
+  "version" "5.2.0"
+
 "framer-motion@^6.3.8", "framer-motion@>=4.0.0":
   "integrity" "sha512-FBbSAG/kzi3Tm9taF6tULhdKtWqiXmISBocsNC+jqHMQP/3PsnS0dFL2qZMmwgVAGwg3InhY739gKNjqOCR7Cw=="
   "resolved" "https://registry.npmjs.org/framer-motion/-/framer-motion-6.3.8.tgz"

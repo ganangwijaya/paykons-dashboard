@@ -3,9 +3,6 @@ import Head from 'next/head'
 import Router from 'next/router'
 
 const Home: NextPage = () => {
-
-  Router.push('/dashboard');
-
   return (
     <div>
       <Head>

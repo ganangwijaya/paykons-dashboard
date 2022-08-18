@@ -2,6 +2,7 @@ import type { ReactElement, ReactNode } from 'react'
 import { NextPage } from 'next'
 import type { AppProps } from 'next/app'
 import { ChakraProvider, ColorModeScript } from '@chakra-ui/react'
+import 'focus-visible/dist/focus-visible';
 
 import theme from '../styles/theme'
 import "@fontsource/inter/300.css"

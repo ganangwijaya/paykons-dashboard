@@ -38,6 +38,8 @@ const TopNav = () => {
   const [header, setHeader] = useState(false);
   const router = useRouter();
 
+  const NavOpt = useColorModeValue(LightGlass, GlassNav);
+
   const listenScrollEvent = (event: any) => {
     if (window.scrollY < 23) {
       return setHeader(false)
@@ -52,7 +54,7 @@ const TopNav = () => {
   }, []);
 
   return (
-    <Flex css={header == true ? useColorModeValue(LightGlass, GlassNav) : NormalNav} pos={'sticky'} top={4} zIndex={1000} h={'60px'} px={4} py={2} rounded={'lg'} justifyContent={'space-between'} alignItems={'center'}>
+    <Flex css={header == true ? NavOpt : NormalNav} pos={'sticky'} top={4} zIndex={1000} h={'60px'} px={4} py={2} rounded={'lg'} justifyContent={'space-between'} alignItems={'center'}>
       <Box>
         <Breadcrumb fontSize={'xs'}>
           <BreadcrumbItem>
