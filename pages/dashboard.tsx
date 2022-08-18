@@ -28,7 +28,7 @@ const DashboardPage = () => {
 
   return (
     <Stack mt={4} gap={2}>
-      <Grid templateColumns={{ base: 'repeat(1, 1fr)', md: 'repeat(4, 1fr)' }} gap={4}>
+      <Grid templateColumns={{ base: 'repeat(1, 1fr)', md: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }} gap={4}>
         <GridItem>
           <Flex p={4} bg={bg} rounded={'xl'} gap={4} alignItems={'center'}>
             <Flex w={10} h={10} bg={iconBG} color={iconColor} justifyContent={'center'} alignItems={'center'} rounded={'full'} fontSize={'xl'}><i className="ri-wallet-3-fill"></i></Flex>
@@ -91,7 +91,7 @@ const DashboardPage = () => {
         </GridItem>
       </Grid>
       <Grid templateColumns={'repeat(3, 1fr)'} gap={4}>
-        <GridItem colSpan={{ base: 3, md: 2 }} bg={bg} p={6} rounded={'xl'} >
+        <GridItem colSpan={{ base: 3, md: 3, lg: 2 }} bg={bg} p={6} rounded={'xl'} >
           <Flex justifyContent={'space-between'}>
             <Box>
               <Heading as={'h4'} size={'md'}>Cash Flow</Heading>
@@ -109,7 +109,7 @@ const DashboardPage = () => {
             <ChartCashFlow chartOption={CashFlowChartData} width={'100%'} height={'330px'} />
           </Box>
         </GridItem>
-        <GridItem colSpan={{ base: 3, md: 1 }} bg={bg} p={6} rounded={'xl'}>
+        <GridItem colSpan={{ base: 3, md: 3, lg: 1 }} bg={bg} p={6} rounded={'xl'}>
           <Flex justifyContent={'space-between'}>
             <Box>
               <Heading as={'h4'} size={'md'}>Member Payouts</Heading>

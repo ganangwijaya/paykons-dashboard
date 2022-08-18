@@ -36,6 +36,12 @@ const theme = extendTheme({
     chartBlue: '#2642D9',
     chartRed: '#E01F1F',
   },
+  shadows: {
+    green: '0 0 0 2px #38A169',
+    darkGreen: '0 0 0 2px #38A169, rgba(56, 161, 105, 0.1) 0px 0px 0px 1px, rgba(56, 161, 105, 0.4) 0px 0px 15px 3px',
+    red: '0 0 0 2px #E53E3E',
+    darkRed: '0 0 0 2px #E53E3E, rgba(229, 62, 62, 0.1) 0px 0px 0px 1px, rgba(229, 62, 62, 0.4) 0px 0px 15px 3px',
+  }
 })
 
 export default theme
