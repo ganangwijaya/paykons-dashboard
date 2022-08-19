@@ -1,13 +1,11 @@
-import { ReactElement, useEffect, useMemo, useState } from "react"
+import { ReactElement, useMemo, useState } from "react"
 
 import Head from 'next/head'
-import { Badge, Box, Button, ButtonGroup, Flex, Grid, GridItem, Heading, IconButton, Input, InputGroup, InputLeftElement, Menu, MenuButton, MenuDivider, MenuGroup, MenuItem, MenuItemOption, MenuList, MenuOptionGroup, Select, Stack, TableContainer, Text } from '@chakra-ui/react'
+import { Badge, Box, ButtonGroup, Flex, Grid, GridItem, Heading, IconButton, Menu, MenuButton, MenuDivider, MenuItemOption, MenuList, MenuOptionGroup, Select, Stack, TableContainer, Text } from '@chakra-ui/react'
+import { Table, Thead, Tbody, Tr, Th, Td, chakra } from '@chakra-ui/react'
 import { useColorModeValue } from '@chakra-ui/react'
 
-import { Table, Thead, Tbody, Tr, Th, Td, chakra } from '@chakra-ui/react'
-import {
-  Column, Table as TableData, useReactTable, createColumnHelper, getCoreRowModel, flexRender, getSortedRowModel, SortingState, getFilteredRowModel, getFacetedRowModel, getFacetedUniqueValues, getFacetedMinMaxValues, ColumnFiltersState, getPaginationRowModel,
-} from "@tanstack/react-table"
+import { useReactTable, createColumnHelper, getCoreRowModel, flexRender, getSortedRowModel, SortingState, getFilteredRowModel, getFacetedRowModel, getFacetedUniqueValues, getFacetedMinMaxValues, ColumnFiltersState, getPaginationRowModel } from "@tanstack/react-table"
 
 import DashboardLayout from "../../component/layout/DashboardLayout"
 import { DataState } from "../../utils/interface"
