@@ -13,6 +13,7 @@ import DashboardLayout from "../../component/layout/DashboardLayout"
 import { DataState } from "../../utils/interface"
 import { TransactionData } from "../../data/transaction/dataTransaction"
 import { MenuComponent } from "../../component/table/MenuComponent"
+import { DebouncedInput, Filter } from "../../component/table/FormFilter"
 
 const TransactionPage = () => {
   const bg = useColorModeValue('gray.50', 'gray.800');
@@ -154,7 +155,7 @@ const TransactionPage = () => {
             </Box>
             <Box>
               <Menu closeOnSelect={false}>
-                <MenuButton  as={IconButton} size={'xs'} icon={<i className="ri-more-fill"></i>} />
+                <MenuButton as={IconButton} size={'xs'} icon={<i className="ri-more-fill"></i>} />
                 <MenuList fontSize={'xs'}>
                   <MenuOptionGroup textTransform={'capitalize'} fontSize={12} value={filteredDate} onChange={(value: string | string[]) => setFilteredDate(String(value))} title='Filter By' type={'radio'}>
                     <MenuItemOption value='day'>Day</MenuItemOption>
@@ -253,24 +254,27 @@ const TransactionPage = () => {
                 </Tbody>
               </Table>
             </TableContainer>
-            <Flex justifyContent={'space-between'} mt={4}>
-              <Flex gap={3} alignItems={'center'}>
-                <Heading as={'h5'} size={'xs'}>Page</Heading>
-                <DebouncedInput
-                  type={'number'}
-                  value={table.getState().pagination.pageIndex + 1}
-                  onChange={value => table.setPageIndex(Number(value) - 1)}
-                  width={12}
-                />
-                <Text fontSize={'xs'} whiteSpace={'nowrap'}>of {' '} {table.getPageCount()}</Text>
+            <Flex justifyContent={'space-between'} mt={4} flexDir={{ base: 'column', md: 'row' }} gap={4}>
+              <Flex gap={6} alignItems={'center'} justifyContent={'space-between'}>
+                <Flex gap={2} alignItems={'center'}>
+                  <Heading as={'h5'} size={'xs'}>Page</Heading>
+                  <DebouncedInput
+                    type={'number'}
+                    value={table.getState().pagination.pageIndex + 1}
+                    onChange={value => table.setPageIndex(Number(value) - 1)}
+                    width={12}
+                  />
+                  <Text fontSize={'xs'} whiteSpace={'nowrap'}>of {' '} {table.getPageCount()}</Text>
+                </Flex>
                 <ButtonGroup gap={1} ml={4}>
                   <IconButton onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()} size={'xs'} aria-label={"Prev Page"} icon={<i className="ri-arrow-left-s-line"></i>} />
                   <IconButton onClick={() => table.nextPage()} disabled={!table.getCanNextPage()} size={'xs'} aria-label={"Next Page"} icon={<i className="ri-arrow-right-s-line"></i>} />
                 </ButtonGroup>
               </Flex>
-              <Flex gap={2} alignItems={'center'}>
+              <Flex gap={2} alignItems={'center'} justifyContent={'flex-end'}>
                 <Heading as={'h5'} size={'xs'}>Show</Heading>
                 <Select
+                  w={16}
                   size={'xs'}
                   rounded={'md'}
                   value={table.getState().pagination.pageSize}
@@ -309,125 +313,5 @@ TransactionPage.getLayout = (page: ReactElement) => {
   )
 }
 
-const Filter = ({ column, table, type }: { column: Column<any, unknown>, table: TableData<any>, type: undefined | string }) => {
-  const firstValue = table.getPreFilteredRowModel().flatRows[0]?.getValue(column.id)
-
-  const columnFilterValue = column.getFilterValue()
-
-  const sortedUniqueValues = useMemo(
-    () =>
-      typeof firstValue === 'number'
-        ? []
-        : Array.from(column.getFacetedUniqueValues().keys()).sort(),
-    [column.getFacetedUniqueValues()]
-  )
-
-  return typeof firstValue === 'number' ? (
-    <>
-      <Flex gap={2}>
-        <DebouncedInput
-          type="number"
-          min={Number(column.getFacetedMinMaxValues()?.[0] ?? '')}
-          max={Number(column.getFacetedMinMaxValues()?.[1] ?? '')}
-          value={(columnFilterValue as [number, number])?.[0] ?? ''}
-          onChange={value =>
-            column.setFilterValue((old: [number, number]) => [value, old?.[1]])
-          }
-          placeholder={`Min ${column.getFacetedMinMaxValues()?.[0]
-            ? `(${column.getFacetedMinMaxValues()?.[0]})`
-            : ''
-            }`}
-        />
-        <DebouncedInput
-          type="number"
-          min={Number(column.getFacetedMinMaxValues()?.[0] ?? '')}
-          max={Number(column.getFacetedMinMaxValues()?.[1] ?? '')}
-          value={(columnFilterValue as [number, number])?.[1] ?? ''}
-          onChange={value =>
-            column.setFilterValue((old: [number, number]) => [old?.[0], value])
-          }
-          placeholder={`Max ${column.getFacetedMinMaxValues()?.[1]
-            ? `(${column.getFacetedMinMaxValues()?.[1]})`
-            : ''
-            }`}
-        />
-      </Flex>
-    </>
-  ) : (
-    <>
-      {column.columnDef.header == 'Date' ?
-        <>
-          {type == 'select' ?
-            <>
-              <Select size={'xs'}
-                value={(columnFilterValue ?? '') as string}
-                defaultValue={column.getFacetedMinMaxValues()?.[0] ? column.getFacetedMinMaxValues()?.[0].toString().split('-')[0] : ''}
-                onChange={(e) => { column.setFilterValue(String(e.target.value)) }}
-              >
-                {['2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022'].map((value: any, index: any) => (
-                  <chakra.option value={value} key={index} >{value}</chakra.option>
-                ))}
-              </Select>
-            </>
-            :
-            <DebouncedInput
-              type={type}
-              value={(columnFilterValue ?? '') as string}
-              onChange={value => {
-                try {
-                  column.setFilterValue(value);
-                } catch (error) {
-                }
-              }}
-              list={column.id + 'list'}
-            />
-          }
-        </> :
-        <>
-          <chakra.datalist id={column.id + 'list'}>
-            {sortedUniqueValues.slice(0, 5000).map((value: any, index: any) => (
-              <option value={value} key={index} />
-            ))}
-          </chakra.datalist>
-          <DebouncedInput
-            type={'text'}
-            value={(columnFilterValue ?? '') as string}
-            onChange={value => column.setFilterValue(value)}
-            placeholder={`Filter... (${column.getFacetedUniqueValues().size})`}
-            list={column.id + 'list'}
-          />
-        </>
-      }
-    </>
-  )
-}
-
-const DebouncedInput = ({ value: initialValue, onChange, debounce = 500, ...props }:
-  {
-    value: string | number
-    onChange: (value: string | number) => void
-    debounce?: number
-  } & Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'>) => {
-
-  const [value, setValue] = useState(initialValue)
-
-  useEffect(() => {
-    setValue(initialValue)
-  }, [initialValue])
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      onChange(value)
-    }, debounce)
-
-    return () => clearTimeout(timeout)
-  }, [value])
-
-  return (
-    <InputGroup size={'xs'}>
-      <Input {...props} size={'xs'} rounded={'md'} value={value} onChange={e => setValue(e.target.value)} />
-    </InputGroup>
-  )
-}
 
 export default TransactionPage
