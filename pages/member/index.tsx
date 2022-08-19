@@ -4,16 +4,17 @@ import Head from 'next/head'
 import { Badge, Box, ButtonGroup, Flex, Grid, GridItem, Heading, IconButton, Menu, MenuButton, MenuDivider, MenuItemOption, MenuList, MenuOptionGroup, Select, Stack, TableContainer, Text } from '@chakra-ui/react'
 import { Table, Thead, Tbody, Tr, Th, Td, chakra } from '@chakra-ui/react'
 import { useColorModeValue } from '@chakra-ui/react'
-
 import { useReactTable, createColumnHelper, getCoreRowModel, flexRender, getSortedRowModel, SortingState, getFilteredRowModel, getFacetedRowModel, getFacetedUniqueValues, getFacetedMinMaxValues, ColumnFiltersState, getPaginationRowModel } from "@tanstack/react-table"
 
 import DashboardLayout from "../../component/layout/DashboardLayout"
-import { DataState } from "../../utils/interface"
-import { TransactionData } from "../../data/transaction/dataTransaction"
-import { TransactionMenuComponent } from "../../component/table/TransactionDataMenu"
 import { DebouncedInput, Filter } from "../../component/table/FormFilter"
 
-const TransactionPage = () => {
+import { MemberState } from "../../utils/interface"
+import { MemberData } from "../../data/MemberData"
+import { MemberMenuComponent } from "../../component/table/MemberDataMenu"
+import { HideData } from "../../component/table/HiddenData"
+
+const MemberPage = () => {
   const bg = useColorModeValue('gray.50', 'gray.800');
   const iconBG = useColorModeValue('blue.500', 'blue.400');
   const iconColor = useColorModeValue('gray.100', 'gray.100');
@@ -23,10 +24,10 @@ const TransactionPage = () => {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [filteredDate, setFilteredDate] = useState<string | 'day' | 'month' | 'year'>('month');
-  const columnHelper = createColumnHelper<DataState>();
+  const columnHelper = createColumnHelper<MemberState>();
 
-  const data: DataState[] = useMemo(
-    () => [...TransactionData], [],
+  const data: MemberState[] = useMemo(
+    () => [...MemberData], [],
   )
 
   const columns = [
@@ -38,28 +39,22 @@ const TransactionPage = () => {
     columnHelper.accessor('name', {
       cell: i => i.getValue()
     }),
-    columnHelper.accessor('amount', {
-      cell: i => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, notation: 'compact' }).format(i.getValue())
-    }),
-    columnHelper.accessor('transactionDate', {
-      header: 'Date',
-      cell: i => new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(i.getValue()))
-    }),
-    columnHelper.accessor('pic', {
+    columnHelper.accessor('class', {
       cell: i => i.getValue()
     }),
-    columnHelper.accessor('status', {
-      filterFn: 'equals',
-      cell: i => (
-        <Badge colorScheme={i.getValue() == 'confirmed' ? 'green' : 'red'} fontSize={10}>{i.getValue()}</Badge>
-      )
+    columnHelper.accessor('phone', {
+      cell: i => {
+        return (
+          <HideData data={i.getValue()} />
+        )
+      }
     }),
     columnHelper.display({
       header: '',
       id: 'action',
       enableSorting: false,
       cell: i => (
-        <TransactionMenuComponent data={i.row.original} />
+        <MemberMenuComponent data={i.row.original} />
       ),
     }),
   ]
@@ -74,23 +69,23 @@ const TransactionPage = () => {
     getCoreRowModel: getCoreRowModel(), getPaginationRowModel: getPaginationRowModel(),
   })
 
-  var totalamount: number = 0;
-  var totalData: number = 0;
-  var totalConfirmed: number = 0;
-  var totalUnconfirmed: number = 0;
+  // var totalamount: number = 0;
+  // var totalData: number = 0;
+  // var totalConfirmed: number = 0;
+  // var totalUnconfirmed: number = 0;
 
-  if (table.getFilteredRowModel().rows.length > 0) {
-    totalData = table.getFilteredRowModel().rows.length;
-    table.getFilteredRowModel().rows.map(d => {
-      totalamount = totalamount + d.original.amount;
-      totalConfirmed = d.original.status == 'confirmed' ? totalConfirmed + 1 : totalConfirmed;
-      totalUnconfirmed = d.original.status == 'unconfirmed' ? totalUnconfirmed + 1 : totalUnconfirmed;
-    })
-  }
+  // if (table.getFilteredRowModel().rows.length > 0) {
+  //   totalData = table.getFilteredRowModel().rows.length;
+  //   table.getFilteredRowModel().rows.map(d => {
+  //     totalamount = totalamount + d.original.amount;
+  //     totalConfirmed = d.original.status == 'confirmed' ? totalConfirmed + 1 : totalConfirmed;
+  //     totalUnconfirmed = d.original.status == 'unconfirmed' ? totalUnconfirmed + 1 : totalUnconfirmed;
+  //   })
+  // }
 
   return (
     <Stack mt={4} gap={2}>
-      <Grid templateColumns={'repeat(4, 1fr)'} gap={4}>
+      {/* <Grid templateColumns={'repeat(4, 1fr)'} gap={4}>
         <GridItem colSpan={{ base: 4, md: 2, lg: 1 }} minW={0}>
           <Flex p={4} bg={bg} rounded={'xl'} gap={4} alignItems={'center'}>
             <Flex minW={10} w={10} h={10} bg={iconBG} color={iconColor} justifyContent={'center'} alignItems={'center'} rounded={'full'} fontSize={'xl'}><i className="ri-wallet-3-fill"></i></Flex>
@@ -143,16 +138,16 @@ const TransactionPage = () => {
             </Box>
           </Flex>
         </GridItem>
-      </Grid>
+      </Grid> */}
       <Grid templateColumns={'repeat(4, 1fr)'} gap={4}>
         <GridItem colSpan={{ base: 4, md: 4 }} bg={bg} p={6} rounded={'xl'} >
           <Flex justifyContent={'space-between'}>
             <Box>
-              <Heading as={'h4'} size={'md'}>Transaction Data</Heading>
+              <Heading as={'h4'} size={'md'}>Member Data</Heading>
               {/* <Text fontSize={'xs'}>Monthly cashflow overview.</Text> */}
             </Box>
             <Box>
-              <Menu closeOnSelect={false}>
+              {/* <Menu closeOnSelect={false}>
                 <MenuButton as={IconButton} size={'xs'} icon={<i className="ri-more-fill"></i>} />
                 <MenuList fontSize={'xs'}>
                   <MenuOptionGroup textTransform={'capitalize'} fontSize={12} value={filteredDate} onChange={(value: string | string[]) => setFilteredDate(String(value))} title='Filter By' type={'radio'}>
@@ -165,7 +160,7 @@ const TransactionPage = () => {
                     {columnFilters.length > 0 && <MenuItemOption onClick={() => setColumnFilters([])} icon={<i className="ri-format-clear"></i>}>Clear Filter</MenuItemOption>}
                   </MenuOptionGroup>
                 </MenuList>
-              </Menu>
+              </Menu> */}
             </Box>
           </Flex>
           <Box mt={6} overflow={'hidden'} pb={2}>
@@ -296,7 +291,7 @@ const TransactionPage = () => {
   )
 }
 
-TransactionPage.getLayout = (page: ReactElement) => {
+MemberPage.getLayout = (page: ReactElement) => {
   return (
     <>
       <Head>
@@ -311,5 +306,4 @@ TransactionPage.getLayout = (page: ReactElement) => {
   )
 }
 
-
-export default TransactionPage
+export default MemberPage

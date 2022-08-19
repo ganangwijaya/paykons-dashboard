@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { DataState } from "../../utils/interface";
 
 export const TransactionData: DataState[] = [

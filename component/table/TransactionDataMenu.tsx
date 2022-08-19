@@ -224,8 +224,7 @@ const ViewImage = ({ data }: { data: DataState }) => {
   )
 }
 
-export const MenuComponent = ({ data }: { data: DataState }) => {
-
+export const TransactionMenuComponent = ({ data }: { data: DataState }) => {
   return (
     <>
       <Menu>
