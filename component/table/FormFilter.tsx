@@ -14,76 +14,81 @@ export const Filter = ({ column, table, type }: { column: Column<any, unknown>, 
         : Array.from(column.getFacetedUniqueValues().keys()).sort(),
     [column.getFacetedUniqueValues()]
   )
-
+  
   return typeof firstValue === 'number' ? (
     <>
       <Flex gap={2}>
-        <DebouncedInput
-          type="number"
-          min={Number(column.getFacetedMinMaxValues()?.[0] ?? '')}
-          max={Number(column.getFacetedMinMaxValues()?.[1] ?? '')}
-          value={(columnFilterValue as [number, number])?.[0] ?? ''}
-          onChange={value =>
-            column.setFilterValue((old: [number, number]) => [value, old?.[1]])
-          }
-          placeholder={`Min ${column.getFacetedMinMaxValues()?.[0]
-            ? `(${column.getFacetedMinMaxValues()?.[0]})`
-            : ''
-            }`}
-        />
-        <DebouncedInput
-          type="number"
-          min={Number(column.getFacetedMinMaxValues()?.[0] ?? '')}
-          max={Number(column.getFacetedMinMaxValues()?.[1] ?? '')}
-          value={(columnFilterValue as [number, number])?.[1] ?? ''}
-          onChange={value =>
-            column.setFilterValue((old: [number, number]) => [old?.[0], value])
-          }
-          placeholder={`Max ${column.getFacetedMinMaxValues()?.[1]
-            ? `(${column.getFacetedMinMaxValues()?.[1]})`
-            : ''
-            }`}
-        />
+        {column.columnDef.header == 'equals' ?
+          <Input type={'number'} size={'xs'} rounded={'md'} value={columnFilterValue as number} onChange={e => column.setFilterValue(e.target.value)} />
+          :
+          <>
+            <DebouncedInput
+              type="number"
+              min={Number(column.getFacetedMinMaxValues()?.[0] ?? '')}
+              max={Number(column.getFacetedMinMaxValues()?.[1] ?? '')}
+              value={(columnFilterValue as [number, number])?.[0] ?? ''}
+              onChange={value =>
+                column.setFilterValue((old: [number, number]) => [value, old?.[1]])
+              }
+              placeholder={`Min ${column.getFacetedMinMaxValues()?.[0]
+                ? `(${column.getFacetedMinMaxValues()?.[0]})`
+                : ''
+                }`}
+            />
+            <DebouncedInput
+              type="number"
+              min={Number(column.getFacetedMinMaxValues()?.[0] ?? '')}
+              max={Number(column.getFacetedMinMaxValues()?.[1] ?? '')}
+              value={(columnFilterValue as [number, number])?.[1] ?? ''}
+              onChange={value =>
+                column.setFilterValue((old: [number, number]) => [old?.[0], value])
+              }
+              placeholder={`Max ${column.getFacetedMinMaxValues()?.[1]
+                ? `(${column.getFacetedMinMaxValues()?.[1]})`
+                : ''
+                }`}
+            />
+          </>
+        }
       </Flex>
     </>
   ) : (
     <>
-      {column.columnDef.header == 'Date' ?
+      {type == 'select' ?
         <>
-          {type == 'select' ?
-            <>
-              <Select size={'xs'}
-                value={(columnFilterValue ?? '') as string}
-                defaultValue={column.getFacetedMinMaxValues()?.[0] ? column.getFacetedMinMaxValues()?.[0].toString().split('-')[0] : ''}
-                onChange={(e) => { column.setFilterValue(String(e.target.value)) }}
-              >
-                {['2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022'].map((value: any, index: any) => (
-                  <chakra.option value={value} key={index} >{value}</chakra.option>
-                ))}
-              </Select>
-            </>
-            :
-            <DebouncedInput
-              type={type}
+          {column.columnDef.header == 'Status' ?
+            <Select size={'xs'}
+              placeholder={'Select Status'}
               value={(columnFilterValue ?? '') as string}
-              onChange={value => {
-                try {
-                  column.setFilterValue(value);
-                } catch (error) {
-                }
-              }}
-              list={column.id + 'list'}
-            />
+              onChange={(e) => { column.setFilterValue(String(e.target.value)) }}
+            >
+              {sortedUniqueValues.slice(0, 5000).map((value: any, index: any) => (
+                <option value={value} key={index}>{value}</option>
+              ))}
+            </Select>
+            :
+            <Select size={'xs'}
+              placeholder={'Select Year'}
+              value={(columnFilterValue ?? '') as string}
+              onChange={(e) => { column.setFilterValue(String(e.target.value)) }}
+            >
+              {['2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022'].map((value: any, index: any) => (
+                <chakra.option value={value} key={index} >{value}</chakra.option>
+              ))}
+            </Select>
           }
-        </> :
+        </>
+        :
         <>
-          <chakra.datalist id={column.id + 'list'}>
-            {sortedUniqueValues.slice(0, 5000).map((value: any, index: any) => (
-              <option value={value} key={index} />
-            ))}
-          </chakra.datalist>
+          {type === 'text' &&
+            <chakra.datalist id={column.id + 'list'}>
+              {sortedUniqueValues.slice(0, 5000).map((value: any, index: any) => (
+                <option value={value} key={index} />
+              ))}
+            </chakra.datalist>
+          }
           <DebouncedInput
-            type={'text'}
+            type={type}
             value={(columnFilterValue ?? '') as string}
             onChange={value => column.setFilterValue(value)}
             placeholder={`Filter... (${column.getFacetedUniqueValues().size})`}

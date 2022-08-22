@@ -16,5 +16,13 @@ export const MemberData: MemberState[] = [
     class: 2019,
     phone: '+628123456789',
     lastUpdate: '2022-01-03T13:00:00.000Z',
+  },
+  {
+    id: 3,
+    name: 'Hayo',
+    email: 'Hayo@paykons.id',
+    class: 2019,
+    phone: '+628123456789',
+    lastUpdate: '2022-01-03T13:00:00.000Z',
   }
 ]

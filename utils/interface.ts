@@ -16,3 +16,14 @@ export interface MemberState {
   phone: string,
   lastUpdate: string,
 }
+
+export interface PayoutState {
+  id: number,
+  memberID: number,
+  payoutDate: string,
+  amount: number,
+  status: 'confirmed' | 'unconfirmed',
+  confirmedBy: undefined | number,
+  payoutEvidence: string,
+  lastUpdate: string,
+}
