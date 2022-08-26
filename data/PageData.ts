@@ -9,6 +9,10 @@ export const PaymentMenu = [
   { title: 'Payment Plan', path: '/plan', icon: 'ri-list-check-2' },
 ]
 
+export const ChildMenu = [
+  { title: 'Member Payout', parent: 'Payout', path: '/payout/[memberid]', icon: 'ri-bank-card-line' },
+]
+
 export const PreferenceMenu = [
   { title: 'Audit Logs', path: '/logs', icon: 'ri-eye-fill' },
   { title: 'Setting', path: '/setting', icon: 'ri-settings-3-fill' },

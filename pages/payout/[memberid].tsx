@@ -1,9 +1,9 @@
-import { ReactElement, useMemo, useState } from "react"
+import { ReactElement, useEffect, useMemo, useState } from "react"
 
 import Head from 'next/head'
 import { useRouter } from "next/router"
 
-import { Badge, Box, Button, ButtonGroup, Flex, Grid, GridItem, Heading, IconButton, Menu, MenuButton, MenuDivider, MenuItemOption, MenuList, MenuOptionGroup, Popover, PopoverArrow, PopoverBody, PopoverCloseButton, PopoverContent, PopoverFooter, PopoverHeader, PopoverTrigger, Select, Stack, TableContainer, Tag, TagCloseButton, TagLabel, Text } from '@chakra-ui/react'
+import { Avatar, Badge, Box, Button, ButtonGroup, Flex, Grid, GridItem, Heading, IconButton, Menu, MenuButton, MenuDivider, MenuItemOption, MenuList, MenuOptionGroup, Popover, PopoverArrow, PopoverBody, PopoverCloseButton, PopoverContent, PopoverFooter, PopoverHeader, PopoverTrigger, Select, Stack, TableContainer, Tag, TagCloseButton, TagLabel, Text } from '@chakra-ui/react'
 import { Table, Thead, Tbody, Tr, Th, Td, chakra } from '@chakra-ui/react'
 import { useColorModeValue } from '@chakra-ui/react'
 import { useReactTable, createColumnHelper, getCoreRowModel, flexRender, getSortedRowModel, SortingState, getFilteredRowModel, getFacetedRowModel, getFacetedUniqueValues, getFacetedMinMaxValues, ColumnFiltersState, getPaginationRowModel } from "@tanstack/react-table"
@@ -11,12 +11,12 @@ import { useReactTable, createColumnHelper, getCoreRowModel, flexRender, getSort
 import DashboardLayout from "../../component/layout/DashboardLayout"
 import { DebouncedInput, Filter } from "../../component/table/FormFilter"
 
-import { PayoutState } from "../../utils/interface"
+import { MemberState, PayoutState } from "../../utils/interface"
 import { PayoutData } from "../../data/PayoutData"
 import { MemberData } from "../../data/MemberData"
 import { PayoutMenuComponent } from "../../component/table/PayoutDataMenu"
 
-const PayoutPage = () => {
+const MemberPayoutPage = () => {
   const router = useRouter()
   const { memberid } = router.query
 
@@ -26,13 +26,14 @@ const PayoutPage = () => {
   const increaseColor = useColorModeValue('green.500', 'green.400');
   const decreaseColor = useColorModeValue('red.500', 'red.400');
 
+  const [member, setMember] = useState<MemberState>({ ...MemberData.filter(f => f.id == Number(memberid))[0] })
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [filteredDate, setFilteredDate] = useState<string | 'day' | 'month' | 'year'>('month');
   const columnHelper = createColumnHelper<PayoutState>();
 
   const data: PayoutState[] = useMemo(
-    () => [...PayoutData], [],
+    () => [...PayoutData.filter(f => f.id === Number(memberid))], [memberid],
   )
 
   const columns = [
@@ -64,7 +65,7 @@ const PayoutPage = () => {
                 <Text>Check all payout data with name: {member.name}</Text>
               </PopoverBody>
               <PopoverFooter display={'flex'} justifyContent={'flex-end'}>
-                <Button onClick={() => router.push(`/payout/${member.id}`)} size={'xs'} variant={'solid'} colorScheme={'blue'}>Check Data</Button>
+                <Button onClick={() => setColumnFilters([{ id: 'memberID', value: member.id }])} size={'xs'} variant={'solid'} colorScheme={'blue'}>Check Data</Button>
               </PopoverFooter>
             </PopoverContent>
           </Popover>
@@ -101,7 +102,7 @@ const PayoutPage = () => {
                       on <chakra.strong>{new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'long' }).format(new Date(i.row.original.lastUpdate))}</chakra.strong>
                     </chakra.span>
                     :
-                    <chakra.span>This payout data is unconfirmed, please check payout evidence and confirm it in next action button.</chakra.span>
+                    'This payout data is unconfirmed, please check payout evidence and confirm it in next action button.'
                   }
                 </Text>
               </PopoverBody>
@@ -134,7 +135,6 @@ const PayoutPage = () => {
   var totalData: number = 0;
   var totalConfirmed: number = 0;
   var totalUnconfirmed: number = 0;
-
   if (table.getFilteredRowModel().rows.length > 0) {
     totalData = table.getFilteredRowModel().rows.length;
     table.getFilteredRowModel().rows.map(d => {
@@ -144,8 +144,67 @@ const PayoutPage = () => {
     })
   }
 
+  useEffect(() => {
+    if (memberid !== undefined) {
+      setMember({ ...MemberData.filter(f => f.id == Number(memberid))[0] });
+    }
+
+    return () => { }
+  }, [memberid])
+
+  const d = new Date();
+  const payoutThisMonth = data.filter(f => f.payoutDate.includes(d.getFullYear() + '-' + d.getMonth()));
+  var totalPayoutThisMonth: number = 0;
+
+  if (payoutThisMonth.length > 0) {
+    payoutThisMonth.map(p => {
+      totalPayoutThisMonth = totalPayoutThisMonth + p.amount;
+    })
+  }
+  else {
+    console.log('ewa');
+  }
+  
   return (
     <Stack mt={4} gap={2}>
+      <Grid templateColumns={{ base: 'repeat(1, 1fr)', md: 'repeat(5, 1fr)' }} gap={4} gridAutoRows={'1fr'}>
+        <GridItem colSpan={3} minW={0}>
+          <Flex p={4} bg={bg} rounded={'xl'} gap={6} alignItems={{ base: 'flex-start', md: 'center' }} justifyContent={{ base: 'flex-end', md: 'space-between' }} flexDir={{ base: 'column', md: 'row' }}>
+            <Flex gap={4} alignItems={'center'}>
+              <Flex minW={10} w={16} h={16} bg={'iconBG'} color={iconColor} justifyContent={'center'} alignItems={'center'} fontSize={'xl'}>
+                <Avatar rounded={'xl'} borderRadius={'xl'} size={'full'} src={'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&&h=200&w=200'} />
+              </Flex>
+              <Box>
+                <Heading as={'h4'} size={'md'}>{member.name}</Heading>
+                <Text fontSize={'xs'}>{member.class}</Text>
+              </Box>
+            </Flex>
+            <Flex gap={2} alignItems={'center'} justifyContent={'flex-end'} w={{ base: '100%', md: 'auto' }}>
+              <Button size={'sm'} fontWeight={'medium'} leftIcon={<i className="ri-profile-line"></i>} variant={'outline'}>View Profile</Button>
+            </Flex>
+          </Flex>
+        </GridItem>
+        <GridItem colSpan={2} minW={0}>
+          <Flex p={4} bg={bg} rounded={'xl'} gap={4} alignItems={'center'} justifyContent={'space-between'} h={'100%'}>
+            <Flex  gap={4}>
+              <Flex minW={10} w={10} h={10} bg={totalPayoutThisMonth > 0 ? increaseColor : decreaseColor} color={iconColor} justifyContent={'center'} alignItems={'center'} rounded={'full'} fontSize={'xl'}><i className="ri-hand-coin-fill"></i></Flex>
+              <Box>
+                <Text fontSize={'xs'}>Payout This {Intl.DateTimeFormat('id-ID', { month: 'long' }).format(new Date())}</Text>
+                <Flex gap={1} alignItems={'flex-end'}>
+                  <Heading as={'h4'} size={'md'}>{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, notation: 'standard' }).format(totalPayoutThisMonth)}</Heading>
+                  <Flex fontSize={10} color={increaseColor} alignItems={'center'}>
+                    <i className="ri-arrow-up-s-fill"></i>
+                    <Text fontWeight={'bold'}>10%</Text>
+                  </Flex>
+                </Flex>
+              </Box>
+            </Flex>
+            <Flex gap={2} alignItems={'center'} justifyContent={'flex-end'} w={{ base: '100%', md: 'auto' }}>
+              <Button size={'sm'} fontWeight={'medium'} leftIcon={<i className="ri-message-2-line"></i>} variant={'outline'}>Send Message</Button>
+            </Flex>
+          </Flex>
+        </GridItem>
+      </Grid>
       <Grid templateColumns={'repeat(4, 1fr)'} gap={4}>
         <GridItem colSpan={{ base: 4, md: 2, lg: 1 }} minW={0}>
           <Flex p={4} bg={bg} rounded={'xl'} gap={4} alignItems={'center'}>
@@ -204,8 +263,8 @@ const PayoutPage = () => {
         <GridItem colSpan={{ base: 4, md: 4 }} bg={bg} p={6} rounded={'xl'} >
           <Flex justifyContent={'space-between'}>
             <Box>
-              <Heading as={'h4'} size={'md'}>Payout Data</Heading>
-              <Text mt={2} fontSize={'xs'}>Payout data list per member.</Text>
+              <Heading as={'h4'} size={'md'}>Member Payout Data</Heading>
+              <Text mt={2} fontSize={'xs'}>Payout data.</Text>
               <Flex gap={2} mt={4}>
                 {columnFilters.length > 0 && columnFilters.map((i, x) => (
                   <Tag key={x} size={'sm'}>
@@ -377,7 +436,7 @@ const PayoutPage = () => {
   )
 }
 
-PayoutPage.getLayout = (page: ReactElement) => {
+MemberPayoutPage.getLayout = (page: ReactElement) => {
   return (
     <>
       <Head>
@@ -392,4 +451,4 @@ PayoutPage.getLayout = (page: ReactElement) => {
   )
 }
 
-export default PayoutPage
+export default MemberPayoutPage
