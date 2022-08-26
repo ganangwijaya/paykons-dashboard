@@ -45,7 +45,7 @@ const MemberPage = () => {
     columnHelper.accessor('phone', {
       cell: i => {
         return (
-          <HideData data={i.getValue()} />
+          <HideData data={i.getValue()} position={'end'} length={4} />
         )
       }
     }),
