@@ -1,7 +1,7 @@
 import { ReactElement, useMemo, useState } from "react"
 
 import Head from 'next/head'
-import { Badge, Box, ButtonGroup, Flex, Grid, GridItem, Heading, IconButton, Menu, MenuButton, MenuDivider, MenuItemOption, MenuList, MenuOptionGroup, Select, Stack, TableContainer, Text } from '@chakra-ui/react'
+import { Badge, Box, Button, ButtonGroup, Flex, Grid, GridItem, Heading, IconButton, Menu, MenuButton, MenuDivider, MenuItemOption, MenuList, MenuOptionGroup, Select, Stack, TableContainer, Text } from '@chakra-ui/react'
 import { Table, Thead, Tbody, Tr, Th, Td, chakra } from '@chakra-ui/react'
 import { useColorModeValue } from '@chakra-ui/react'
 import { useReactTable, createColumnHelper, getCoreRowModel, flexRender, getSortedRowModel, SortingState, getFilteredRowModel, getFacetedRowModel, getFacetedUniqueValues, getFacetedMinMaxValues, ColumnFiltersState, getPaginationRowModel } from "@tanstack/react-table"
@@ -13,13 +13,11 @@ import { MemberState } from "../../utils/interface"
 import { MemberData } from "../../data/MemberData"
 import { MemberMenuComponent } from "../../component/table/MemberDataMenu"
 import { HideData } from "../../component/table/HiddenData"
+import { CondensedCard } from "../../component/Card"
+import Link from "next/link"
 
 const MemberPage = () => {
   const bg = useColorModeValue('gray.50', 'gray.800');
-  const iconBG = useColorModeValue('blue.500', 'blue.400');
-  const iconColor = useColorModeValue('gray.100', 'gray.100');
-  const increaseColor = useColorModeValue('green.500', 'green.400');
-  const decreaseColor = useColorModeValue('red.500', 'red.400');
 
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
@@ -37,7 +35,9 @@ const MemberPage = () => {
       cell: i => i.getValue()
     }),
     columnHelper.accessor('name', {
-      cell: i => i.getValue()
+      cell: i => (
+        <Link href={`/member/${i.row.original.id}`} passHref><Button size={'xs'} variant={'unstyled'}>{i.getValue()}</Button></Link>
+      )
     }),
     columnHelper.accessor('class', {
       cell: i => i.getValue()
@@ -69,76 +69,33 @@ const MemberPage = () => {
     getCoreRowModel: getCoreRowModel(), getPaginationRowModel: getPaginationRowModel(),
   })
 
-  // var totalamount: number = 0;
-  // var totalData: number = 0;
-  // var totalConfirmed: number = 0;
-  // var totalUnconfirmed: number = 0;
+  var totalClass: number = 0;
+  var totalData: number = 0;
+  const uniqeClass = table.getColumn('class').getFacetedMinMaxValues();
 
-  // if (table.getFilteredRowModel().rows.length > 0) {
-  //   totalData = table.getFilteredRowModel().rows.length;
-  //   table.getFilteredRowModel().rows.map(d => {
-  //     totalamount = totalamount + d.original.amount;
-  //     totalConfirmed = d.original.status == 'confirmed' ? totalConfirmed + 1 : totalConfirmed;
-  //     totalUnconfirmed = d.original.status == 'unconfirmed' ? totalUnconfirmed + 1 : totalUnconfirmed;
-  //   })
-  // }
+  if (table.getFilteredRowModel().rows.length > 0) {
+    totalData = table.getFilteredRowModel().rows.length;
+    totalClass = uniqeClass != undefined ? uniqeClass.length : 0;
+  }
 
   return (
     <Stack mt={4} gap={2}>
-      {/* <Grid templateColumns={'repeat(4, 1fr)'} gap={4}>
+      <Grid templateColumns={'repeat(4, 1fr)'} gridAutoRows={'1fr'} gap={4}>
         <GridItem colSpan={{ base: 4, md: 2, lg: 1 }} minW={0}>
-          <Flex p={4} bg={bg} rounded={'xl'} gap={4} alignItems={'center'}>
-            <Flex minW={10} w={10} h={10} bg={iconBG} color={iconColor} justifyContent={'center'} alignItems={'center'} rounded={'full'} fontSize={'xl'}><i className="ri-wallet-3-fill"></i></Flex>
-            <Box>
-              <Text fontSize={'xs'}>Total Amount</Text>
-              <Flex gap={1} alignItems={'flex-end'}>
-                <Heading as={'h4'} size={'md'}>{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, notation: 'standard' }).format(totalamount)}</Heading>
-                <Flex fontSize={10} color={increaseColor} alignItems={'center'}>
-                  <i className="ri-arrow-up-s-fill"></i>
-                  <Text fontWeight={'bold'}>10%</Text>
-                </Flex>
-              </Flex>
-            </Box>
-          </Flex>
+          <CondensedCard name={'Total Member'} data={totalData} icon={'ri-team-fill'} />
         </GridItem>
         <GridItem colSpan={{ base: 4, md: 2, lg: 1 }} minW={0}>
-          <Flex p={4} bg={bg} rounded={'xl'} gap={4} alignItems={'center'}>
-            <Flex minW={10} w={10} h={10} bg={iconBG} color={iconColor} justifyContent={'center'} alignItems={'center'} rounded={'full'} fontSize={'xl'}><i className="ri-file-list-3-fill"></i></Flex>
-            <Box>
-              <Text fontSize={'xs'}>Total Data</Text>
-              <Flex gap={1} alignItems={'flex-end'}>
-                <Heading as={'h4'} size={'md'}>{totalData}</Heading>
-                <Flex fontSize={10} color={increaseColor} alignItems={'center'}>
-                  <i className="ri-arrow-up-s-fill"></i>
-                  <Text fontWeight={'bold'}>10%</Text>
-                </Flex>
-              </Flex>
-            </Box>
+          <CondensedCard name={'Total Class'} data={totalClass} icon={'ri-ancient-gate-fill'} />
+        </GridItem>
+        <GridItem colSpan={{ base: 4, md: 4, lg: 2 }}>
+          <Flex h={'100%'} w={{ base: '100%', md: 'auto' }} p={4} bg={bg} rounded={'xl'} gap={6} alignItems={{ base: 'flex-start', md: 'center' }} justifyContent={'flex-end'} flexDir={{ base: 'column', md: 'row' }}>
+            <Button w={{ base: '100%', md: 'auto' }} size={'sm'} fontWeight={'medium'} leftIcon={<i className="ri-spy-line"></i>} variant={'outline'}>View Member Log</Button>
+            <Link href={'/member/add'} passHref>
+              <Button w={{ base: '100%', md: 'auto' }} size={'sm'} fontWeight={'medium'} leftIcon={<i className="ri-add-line"></i>} variant={'outline'}>Add New Member</Button>
+            </Link>
           </Flex>
         </GridItem>
-        <GridItem colSpan={{ base: 4, md: 2, lg: 1 }} minW={0}>
-          <Flex cursor={'pointer'} onClick={() => setColumnFilters([{ id: 'status', value: 'confirmed' }])} p={4} bg={bg} boxShadow={columnFilters.length > 0 ? columnFilters[0].value == 'confirmed' ? 'darkGreen' : 'green' : 'green'} _hover={{ boxShadow: 'darkGreen' }} transition={'all 0.3s ease-in-out'} rounded={'xl'} gap={4} alignItems={'center'}>
-            <Flex minW={10} w={10} h={10} bg={'green.500'} color={iconColor} justifyContent={'center'} alignItems={'center'} rounded={'full'} fontSize={'xl'}><i className="ri-checkbox-circle-fill"></i></Flex>
-            <Box>
-              <Text fontSize={'xs'}>Total Confirmed</Text>
-              <Flex gap={1} alignItems={'flex-end'}>
-                <Heading as={'h4'} size={'md'}>{totalConfirmed}</Heading>
-              </Flex>
-            </Box>
-          </Flex>
-        </GridItem>
-        <GridItem colSpan={{ base: 4, md: 2, lg: 1 }} minW={0}>
-          <Flex cursor={'pointer'} onClick={() => setColumnFilters([{ id: 'status', value: 'unconfirmed' }])} p={4} bg={bg} boxShadow={columnFilters.length > 0 ? columnFilters[0].value == 'unconfirmed' ? 'darkRed' : 'red' : 'red'} _hover={{ boxShadow: 'darkRed' }} transition={'all 0.3s ease-in-out'} rounded={'xl'} gap={4} alignItems={'center'}>
-            <Flex minW={10} w={10} h={10} bg={'red.500'} color={iconColor} justifyContent={'center'} alignItems={'center'} rounded={'full'} fontSize={'xl'}><i className="ri-spam-fill"></i></Flex>
-            <Box>
-              <Text fontSize={'xs'}>Total Unconfirmed</Text>
-              <Flex gap={1} alignItems={'flex-end'}>
-                <Heading as={'h4'} size={'md'}>{totalUnconfirmed}</Heading>
-              </Flex>
-            </Box>
-          </Flex>
-        </GridItem>
-      </Grid> */}
+      </Grid>
       <Grid templateColumns={'repeat(4, 1fr)'} gap={4}>
         <GridItem colSpan={{ base: 4, md: 4 }} bg={bg} p={6} rounded={'xl'} >
           <Flex justifyContent={'space-between'}>

@@ -15,6 +15,7 @@ import { MemberState, PayoutState } from "../../utils/interface"
 import { PayoutData } from "../../data/PayoutData"
 import { MemberData } from "../../data/MemberData"
 import { PayoutMenuComponent } from "../../component/table/PayoutDataMenu"
+import Link from "next/link"
 
 const MemberPayoutPage = () => {
   const router = useRouter()
@@ -164,7 +165,7 @@ const MemberPayoutPage = () => {
   else {
     console.log('ewa');
   }
-  
+
   return (
     <Stack mt={4} gap={2}>
       <Grid templateColumns={{ base: 'repeat(1, 1fr)', md: 'repeat(5, 1fr)' }} gap={4} gridAutoRows={'1fr'}>
@@ -180,13 +181,15 @@ const MemberPayoutPage = () => {
               </Box>
             </Flex>
             <Flex gap={2} alignItems={'center'} justifyContent={'flex-end'} w={{ base: '100%', md: 'auto' }}>
-              <Button size={'sm'} fontWeight={'medium'} leftIcon={<i className="ri-profile-line"></i>} variant={'outline'}>View Profile</Button>
+              <Link href={`/member/${memberid}`} passHref>
+                <Button size={'sm'} fontWeight={'medium'} leftIcon={<i className="ri-profile-line"></i>} variant={'outline'}>View Profile</Button>
+              </Link>
             </Flex>
           </Flex>
         </GridItem>
         <GridItem colSpan={2} minW={0}>
           <Flex p={4} bg={bg} rounded={'xl'} gap={4} alignItems={'center'} justifyContent={'space-between'} h={'100%'}>
-            <Flex  gap={4}>
+            <Flex gap={4}>
               <Flex minW={10} w={10} h={10} bg={totalPayoutThisMonth > 0 ? increaseColor : decreaseColor} color={iconColor} justifyContent={'center'} alignItems={'center'} rounded={'full'} fontSize={'xl'}><i className="ri-hand-coin-fill"></i></Flex>
               <Box>
                 <Text fontSize={'xs'}>Payout This {Intl.DateTimeFormat('id-ID', { month: 'long' }).format(new Date())}</Text>

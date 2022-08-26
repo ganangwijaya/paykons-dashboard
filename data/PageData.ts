@@ -11,6 +11,8 @@ export const PaymentMenu = [
 
 export const ChildMenu = [
   { title: 'Member Payout', parent: 'Payout', path: '/payout/[memberid]', icon: 'ri-bank-card-line' },
+  { title: 'Member Detail', parent: 'Member', path: '/member/[memberid]', icon: 'ri-team-fill' },
+  { title: 'Add Member', parent: 'Member', path: '/member/add', icon: 'ri-team-fill' },
 ]
 
 export const PreferenceMenu = [

@@ -14,6 +14,8 @@ export interface MemberState {
   email: string,
   class: number,
   phone: string,
+  bio: string,
+  role: number,
   lastUpdate: string,
 }
 
@@ -25,5 +27,19 @@ export interface PayoutState {
   status: 'confirmed' | 'unconfirmed',
   confirmedBy: undefined | number,
   payoutEvidence: string,
+  lastUpdate: string,
+}
+
+export interface PermissionState {
+  id: number,
+  name: string,
+  status: boolean,
+  lastUpdate: string,
+}
+
+export interface RoleState {
+  id: number,
+  name: string,
+  permission: PermissionState[],
   lastUpdate: string,
 }
