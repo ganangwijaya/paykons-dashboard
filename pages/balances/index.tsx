@@ -1,33 +1,40 @@
 import { ReactElement, useMemo, useState } from "react"
 
+import dynamic from "next/dynamic"
 import Head from 'next/head'
-import { Badge, Box, ButtonGroup, Flex, Grid, GridItem, Heading, IconButton, Menu, MenuButton, MenuDivider, MenuItemOption, MenuList, MenuOptionGroup, Select, Stack, TableContainer, Text } from '@chakra-ui/react'
+import { Badge, Box, ButtonGroup, filter, Flex, Grid, GridItem, Heading, IconButton, Menu, MenuButton, MenuDivider, MenuItem, MenuItemOption, MenuList, MenuOptionGroup, Select, Stack, TableContainer, Text } from '@chakra-ui/react'
 import { Table, Thead, Tbody, Tr, Th, Td, chakra } from '@chakra-ui/react'
 import { useColorModeValue } from '@chakra-ui/react'
 
 import { useReactTable, createColumnHelper, getCoreRowModel, flexRender, getSortedRowModel, SortingState, getFilteredRowModel, getFacetedRowModel, getFacetedUniqueValues, getFacetedMinMaxValues, ColumnFiltersState, getPaginationRowModel } from "@tanstack/react-table"
 
 import DashboardLayout from "../../component/layout/DashboardLayout"
-import { DataState } from "../../utils/interface"
-import { TransactionData } from "../../data/TransactionData"
+import { BalanceState } from "../../utils/interface"
+import { BalancesData } from "../../data/BalancesData"
 import { TransactionMenuComponent } from "../../component/table/TransactionDataMenu"
 import { DebouncedInput, Filter } from "../../component/table/FormFilter"
+import { CondensedCard } from "../../component/Card"
+import { BalancesChartData, CashFlowChartData } from "../../data/ChartData"
 
-const TransactionPage = () => {
+const ChartCashFlow = dynamic(
+  () => import('../../component/Chart'),
+  { ssr: false }
+)
+
+const BalancesChart = dynamic(
+  () => import('../../component/Chart'),
+  { ssr: false }
+)
+
+const BalancesPage = () => {
   const bg = useColorModeValue('gray.50', 'gray.800');
-  const iconBG = useColorModeValue('blue.500', 'blue.400');
-  const iconColor = useColorModeValue('gray.100', 'gray.100');
-  const increaseColor = useColorModeValue('green.500', 'green.400');
-  const decreaseColor = useColorModeValue('red.500', 'red.400');
 
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [filteredDate, setFilteredDate] = useState<string | 'day' | 'month' | 'year'>('month');
-  const columnHelper = createColumnHelper<DataState>();
+  const columnHelper = createColumnHelper<BalanceState>();
 
-  const data: DataState[] = useMemo(
-    () => [...TransactionData], [],
-  )
+  const data: BalanceState[] = useMemo(() => [...BalancesData], [])
 
   const columns = [
     columnHelper.accessor('id', {
@@ -35,32 +42,17 @@ const TransactionPage = () => {
       enableSorting: true,
       cell: i => i.getValue()
     }),
-    columnHelper.accessor('name', {
-      cell: i => i.getValue()
+    columnHelper.accessor('month', {
+      cell: i => new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(new Date(i.getValue()))
     }),
-    columnHelper.accessor('amount', {
+    columnHelper.accessor('income', {
       cell: i => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, notation: 'compact' }).format(i.getValue())
     }),
-    columnHelper.accessor('transactionDate', {
-      header: 'Date',
-      cell: i => new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(i.getValue()))
+    columnHelper.accessor('outcome', {
+      cell: i => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, notation: 'compact' }).format(i.getValue())
     }),
-    columnHelper.accessor('pic', {
-      cell: i => i.getValue()
-    }),
-    columnHelper.accessor('status', {
-      filterFn: 'equals',
-      cell: i => (
-        <Badge colorScheme={i.getValue() == 'confirmed' ? 'green' : 'red'} fontSize={10}>{i.getValue()}</Badge>
-      )
-    }),
-    columnHelper.display({
-      header: '',
-      id: 'action',
-      enableSorting: false,
-      cell: i => (
-        <TransactionMenuComponent data={i.row.original} />
-      ),
+    columnHelper.accessor('balance', {
+      cell: i => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, notation: 'compact' }).format(i.getValue())
     }),
   ]
 
@@ -74,85 +66,90 @@ const TransactionPage = () => {
     getCoreRowModel: getCoreRowModel(), getPaginationRowModel: getPaginationRowModel(),
   })
 
-  var totalamount: number = 0;
-  var totalData: number = 0;
-  var totalConfirmed: number = 0;
-  var totalUnconfirmed: number = 0;
+  var totalBalances: number = 0;
+  var totalIncome: number = 0;
+  var totalOutcome: number = 0;
+  var balanceThisMonth: number = 0;
+  var totalMonth: number = 0;
+
+  const DateNow = new Date();
 
   if (table.getFilteredRowModel().rows.length > 0) {
-    totalData = table.getFilteredRowModel().rows.length;
-    table.getFilteredRowModel().rows.map(d => {
-      totalamount = totalamount + d.original.amount;
-      totalConfirmed = d.original.status == 'confirmed' ? totalConfirmed + 1 : totalConfirmed;
-      totalUnconfirmed = d.original.status == 'unconfirmed' ? totalUnconfirmed + 1 : totalUnconfirmed;
+    totalMonth = table.getRowModel().rows.length;
+
+    table.getFilteredRowModel().rows.map((x) => {
+      totalBalances = totalBalances + x.original.balance;
+      totalIncome = totalIncome + x.original.income;
+      totalOutcome = totalOutcome + x.original.outcome;
     })
+
+    table.getFilteredRowModel().rows.filter(f => f.original.month.includes(DateNow.getFullYear() + '-' + DateNow.getMonth())).map(x => {
+      balanceThisMonth = balanceThisMonth + x.original.balance;
+    })
+
   }
 
   return (
     <Stack mt={4} gap={2}>
       <Grid templateColumns={'repeat(4, 1fr)'} gap={4}>
         <GridItem colSpan={{ base: 4, md: 2, lg: 1 }} minW={0}>
-          <Flex p={4} bg={bg} rounded={'xl'} gap={4} alignItems={'center'}>
-            <Flex minW={10} w={10} h={10} bg={iconBG} color={iconColor} justifyContent={'center'} alignItems={'center'} rounded={'full'} fontSize={'xl'}><i className="ri-wallet-3-fill"></i></Flex>
-            <Box>
-              <Text fontSize={'xs'}>Total Amount</Text>
-              <Flex gap={1} alignItems={'flex-end'}>
-                <Heading as={'h4'} size={'md'}>{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, notation: 'standard' }).format(totalamount)}</Heading>
-                <Flex fontSize={10} color={increaseColor} alignItems={'center'}>
-                  <i className="ri-arrow-up-s-fill"></i>
-                  <Text fontWeight={'bold'}>10%</Text>
-                </Flex>
-              </Flex>
-            </Box>
-          </Flex>
+          <CondensedCard name={'Total Balances'} data={new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, notation: 'compact' }).format(totalBalances)} icon={'ri-scales-fill'} />
         </GridItem>
         <GridItem colSpan={{ base: 4, md: 2, lg: 1 }} minW={0}>
-          <Flex p={4} bg={bg} rounded={'xl'} gap={4} alignItems={'center'}>
-            <Flex minW={10} w={10} h={10} bg={iconBG} color={iconColor} justifyContent={'center'} alignItems={'center'} rounded={'full'} fontSize={'xl'}><i className="ri-file-list-3-fill"></i></Flex>
-            <Box>
-              <Text fontSize={'xs'}>Total Data</Text>
-              <Flex gap={1} alignItems={'flex-end'}>
-                <Heading as={'h4'} size={'md'}>{totalData}</Heading>
-                <Flex fontSize={10} color={increaseColor} alignItems={'center'}>
-                  <i className="ri-arrow-up-s-fill"></i>
-                  <Text fontWeight={'bold'}>10%</Text>
-                </Flex>
-              </Flex>
-            </Box>
-          </Flex>
+          <CondensedCard name={'Total Income'} data={new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, notation: 'compact' }).format(totalIncome)} icon={'ri-hand-coin-fill'} />
         </GridItem>
         <GridItem colSpan={{ base: 4, md: 2, lg: 1 }} minW={0}>
-          <Flex cursor={'pointer'} onClick={() => setColumnFilters([{ id: 'status', value: 'confirmed' }])} p={4} bg={bg} boxShadow={columnFilters.length > 0 ? columnFilters[0].value == 'confirmed' ? 'darkGreen' : 'green' : 'green'} _hover={{ boxShadow: 'darkGreen' }} transition={'all 0.3s ease-in-out'} rounded={'xl'} gap={4} alignItems={'center'}>
-            <Flex minW={10} w={10} h={10} bg={'green.500'} color={iconColor} justifyContent={'center'} alignItems={'center'} rounded={'full'} fontSize={'xl'}><i className="ri-checkbox-circle-fill"></i></Flex>
-            <Box>
-              <Text fontSize={'xs'}>Total Confirmed</Text>
-              <Flex gap={1} alignItems={'flex-end'}>
-                <Heading as={'h4'} size={'md'}>{totalConfirmed}</Heading>
-              </Flex>
-            </Box>
-          </Flex>
+          <CondensedCard name={'Total Outcome'} data={new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, notation: 'compact' }).format(totalOutcome)} icon={'ri-bank-card-fill'} />
         </GridItem>
         <GridItem colSpan={{ base: 4, md: 2, lg: 1 }} minW={0}>
-          <Flex cursor={'pointer'} onClick={() => setColumnFilters([{ id: 'status', value: 'unconfirmed' }])} p={4} bg={bg} boxShadow={columnFilters.length > 0 ? columnFilters[0].value == 'unconfirmed' ? 'darkRed' : 'red' : 'red'} _hover={{ boxShadow: 'darkRed' }} transition={'all 0.3s ease-in-out'} rounded={'xl'} gap={4} alignItems={'center'}>
-            <Flex minW={10} w={10} h={10} bg={'red.500'} color={iconColor} justifyContent={'center'} alignItems={'center'} rounded={'full'} fontSize={'xl'}><i className="ri-spam-fill"></i></Flex>
+          <CondensedCard name={'Total Data'} data={totalMonth} icon={'ri-file-text-fill'} />
+        </GridItem>
+      </Grid>
+      <Grid templateColumns={'repeat(6, 1fr)'} gap={4}>
+        <GridItem colSpan={{ base: 6, md: 4, lg: 4 }} bg={bg} p={6} rounded={'xl'} >
+          <Flex justifyContent={'space-between'}>
             <Box>
-              <Text fontSize={'xs'}>Total Unconfirmed</Text>
-              <Flex gap={1} alignItems={'flex-end'}>
-                <Heading as={'h4'} size={'md'}>{totalUnconfirmed}</Heading>
-              </Flex>
+              <Heading as={'h4'} size={'md'}>Cash Flow</Heading>
+              <Text fontSize={'xs'}>Monthly cashflow overview.</Text>
             </Box>
+            <Menu>
+              <MenuButton as={IconButton} size={'xs'} icon={<i className="ri-more-line"></i>} />
+              <MenuList fontSize={'xs'}>
+                <MenuItem icon={<i className="ri-calendar-event-line"></i>}>Change Year</MenuItem>
+              </MenuList>
+            </Menu>
           </Flex>
+          <Box mt={2} overflow={'hidden'}>
+            <ChartCashFlow chartOption={CashFlowChartData} width={'100%'} height={'330px'} />
+          </Box>
+        </GridItem>
+        <GridItem colSpan={{ base: 6, md: 2, lg: 2 }} bg={bg} p={6} rounded={'xl'} >
+          <Flex justifyContent={'space-between'}>
+            <Box>
+              <Heading as={'h4'} size={'md'}>Balances</Heading>
+              <Text fontSize={'xs'}>Monthly balances overview.</Text>
+            </Box>
+            <Menu>
+              <MenuButton as={IconButton} size={'xs'} icon={<i className="ri-more-line"></i>} />
+              <MenuList fontSize={'xs'}>
+                <MenuItem icon={<i className="ri-calendar-event-line"></i>}>Change Year</MenuItem>
+              </MenuList>
+            </Menu>
+          </Flex>
+          <Box mt={2} overflow={'hidden'}>
+            <BalancesChart chartOption={BalancesChartData} width={'100%'} height={'330px'} />
+          </Box>
         </GridItem>
       </Grid>
       <Grid templateColumns={'repeat(4, 1fr)'} gap={4}>
         <GridItem colSpan={{ base: 4, md: 4 }} bg={bg} p={6} rounded={'xl'} >
           <Flex justifyContent={'space-between'}>
             <Box>
-              <Heading as={'h4'} size={'md'}>Transaction Data</Heading>
+              <Heading as={'h4'} size={'md'}>Balances Data</Heading>
               {/* <Text fontSize={'xs'}>Monthly cashflow overview.</Text> */}
             </Box>
             <Box>
-              <Menu closeOnSelect={false}>
+              {/* <Menu closeOnSelect={false}>
                 <MenuButton as={IconButton} size={'xs'} icon={<i className="ri-more-fill"></i>} />
                 <MenuList fontSize={'xs'}>
                   <MenuOptionGroup textTransform={'capitalize'} fontSize={12} value={filteredDate} onChange={(value: string | string[]) => setFilteredDate(String(value))} title='Filter By' type={'radio'}>
@@ -165,7 +162,7 @@ const TransactionPage = () => {
                     {columnFilters.length > 0 && <MenuItemOption onClick={() => setColumnFilters([])} icon={<i className="ri-format-clear"></i>}>Clear Filter</MenuItemOption>}
                   </MenuOptionGroup>
                 </MenuList>
-              </Menu>
+              </Menu> */}
             </Box>
           </Flex>
           <Box mt={6} overflow={'hidden'} pb={2}>
@@ -296,7 +293,7 @@ const TransactionPage = () => {
   )
 }
 
-TransactionPage.getLayout = (page: ReactElement) => {
+BalancesPage.getLayout = (page: ReactElement) => {
   return (
     <>
       <Head>
@@ -312,4 +309,4 @@ TransactionPage.getLayout = (page: ReactElement) => {
 }
 
 
-export default TransactionPage
+export default BalancesPage

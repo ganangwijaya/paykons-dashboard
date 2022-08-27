@@ -1,19 +1,20 @@
 import { ApexOptions } from "apexcharts"
 import theme from "../styles/theme";
+import { BalancesData } from "./BalancesData";
 
 export const CashFlowChartData: ApexOptions = {
   series: [
     {
       name: "Income",
-      data: [4000000, 3600000, 3800000, 4000000, 3600000, 4400000, 4000000, 4200000, 3400000, 3800000, 4000000, 3500000]
+      data: [...BalancesData.map((d) => d.income)]
     },
     {
       name: "Outcome",
-      data: [3900000, 3500000, 3700000, 3900000, 3500000, 4300000, 3900000, 4100000, 3300000, 3700000, 3900000, 3400000]
+      data: [...BalancesData.map((d) => d.outcome)]
     }
   ],
   chart: {
-    id: "balances",
+    id: "cashflow",
     type: 'area',
     toolbar: {
       show: false
@@ -62,11 +63,62 @@ export const CashFlowChartData: ApexOptions = {
   },
   xaxis: {
     type: "datetime",
-    categories: ["2022-01-19T00:00:00.000Z", "2022-02-19T00:00:00.000Z", "2022-03-19T00:00:00.000Z", "2022-04-19T00:00:00.000Z", "2022-05-19T00:00:00.000Z", "2022-06-19T00:00:00.000Z", "2022-07-19T00:00:00.000Z", "2022-08-19T00:00:00.000Z", "2022-09-19T00:00:00.000Z", "2022-10-19T00:00:00.000Z", "2022-11-19T00:00:00.000Z", "2022-12-19T00:00:00.000Z"],
+    categories: [...BalancesData.map(d => d.month)],
     labels: {
       format: 'MMM',
       style: {
         colors: '',
+      },
+    },
+  },
+  yaxis: {
+    labels: {
+      style: {
+        colors: '#FFF',
+      },
+      formatter: function (value) {
+        return (new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, notation: 'compact' }).format(value))
+      }
+    }
+  },
+  tooltip: {
+    theme: 'dark',
+    x: {
+      format: 'MMM y'
+    },
+  },
+}
+
+export const BalancesChartData: ApexOptions = {
+  series: [{
+    name: 'Balances',
+    data: [...BalancesData.map(d => d.balance)]
+  }],
+  chart: {
+    id: 'balancesData',
+    type: 'bar',
+    toolbar: {
+      show: false
+    },
+    zoom: {
+      enabled: false,
+    },
+    fontFamily: 'Inter, sans-serif',
+  },
+  dataLabels: {
+    enabled: false
+  },
+  grid: {
+    strokeDashArray: 6,
+  },
+  colors: [theme.colors.chartBlue],
+  xaxis: {
+    type: "datetime",
+    categories: [...BalancesData.map(d => d.month)],
+    labels: {
+      format: 'MMM',
+      style: {
+        colors: '#FFF',
       },
     },
   },

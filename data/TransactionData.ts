@@ -1,4 +1,4 @@
-import { DataState } from "../../utils/interface";
+import { DataState } from "../utils/interface";
 
 export const TransactionData: DataState[] = [
   {

@@ -43,3 +43,11 @@ export interface RoleState {
   permission: PermissionState[],
   lastUpdate: string,
 }
+
+export interface BalanceState {
+  id: number,
+  month: string,
+  income: number,
+  outcome: number,
+  balance: number
+}

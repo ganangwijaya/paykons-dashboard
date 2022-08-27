@@ -11,7 +11,7 @@ export const CondensedCard = (props: { name: string, data: string | number, icon
 
   return (
     <Flex p={4} bg={bg} rounded={'xl'} gap={4} alignItems={'center'}>
-      <Flex minW={10} w={10} h={10} bg={iconBG} color={iconColor} justifyContent={'center'} alignItems={'center'} rounded={'full'} fontSize={'xl'}><i className="ri-ancient-gate-fill"></i></Flex>
+      <Flex minW={10} w={10} h={10} bg={iconBG} color={iconColor} justifyContent={'center'} alignItems={'center'} rounded={'full'} fontSize={'xl'}><i className={props.icon}></i></Flex>
       <Box>
         <Text fontSize={'xs'}>{props.name}</Text>
         <Flex gap={1} alignItems={'flex-end'}>
