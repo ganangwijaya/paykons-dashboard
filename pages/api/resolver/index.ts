@@ -20,18 +20,18 @@ export const resolvers = {
       const user = await db.collection("user").find({ email: email }).toArray();
       const member = await db.collection("member").find({ email: email }).toArray();
 
-      if (user == null) {
-        return ({ status: { success: false, message: 'User not found' } })
+      if (user == null || user.length == 0) {
+        return ({ status: { success: false, message: 'User not found.' } })
       }
       else {
         if (bcrypt.compareSync(password, user[0].password)) {
           return ({
-            status: { success: true, message: 'berhasil' },
+            status: { success: true, message: 'Login success.' },
             member: { ...member[0] }
           })
         }
         else {
-          return ({ status: { success: false, message: 'Incorect password' } })
+          return ({ status: { success: false, message: 'Incorrect password.' } })
         }
       }
     }

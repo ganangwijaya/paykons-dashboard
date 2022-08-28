@@ -5,7 +5,7 @@ import { signIn } from 'next-auth/react'
 
 import { useState } from "react";
 
-import { Alert, AlertIcon, AlertTitle, Box, Button, chakra, Container, Flex, FormControl, FormLabel, Heading, Input, InputGroup, InputRightElement, Stack, Switch, Text, useColorModeValue } from "@chakra-ui/react"
+import { Alert, AlertIcon, AlertTitle, Box, Button, chakra, Container, Flex, FormControl, FormErrorMessage, FormLabel, Heading, Input, InputGroup, InputRightElement, Stack, Switch, Text, useColorModeValue } from "@chakra-ui/react"
 
 const LoginPage = () => {
 
@@ -60,11 +60,12 @@ const LoginPage = () => {
             <Flex p={6} bg={cardBG} mt={6} rounded={'xl'}>
               <chakra.form w={'full'} onSubmit={e => { e.preventDefault(); handleLogin() }}>
                 <Stack gap={2}>
-                  <FormControl>
+                  <FormControl isInvalid={loginStatus.show && loginStatus.message == 'User not found.'}>
                     <FormLabel fontSize={'sm'}>Email address</FormLabel>
                     <Input value={loginData.email} onChange={e => setLoginData(d => ({ ...d, email: e.target.value }))} size={'md'} type={'email'} rounded={'md'} />
+                    <FormErrorMessage>Wrong email address.</FormErrorMessage>
                   </FormControl>
-                  <FormControl>
+                  <FormControl isInvalid={loginStatus.show && loginStatus.message == 'Incorrect password.'}>
                     <FormLabel fontSize={'sm'}>Password</FormLabel>
                     <InputGroup>
                       <Input value={loginData.password} onChange={e => setLoginData(d => ({ ...d, password: e.target.value }))} size={'md'} type={showPassword ? 'text' : 'password'} rounded={'md'} />
@@ -74,6 +75,7 @@ const LoginPage = () => {
                         </Button>
                       </InputRightElement>
                     </InputGroup>
+                    <FormErrorMessage>Incorrect Password.</FormErrorMessage>
                   </FormControl>
                   <Flex justifyContent={'space-between'}>
                     <FormControl display={'flex'} alignItems={'center'}>
