@@ -1,6 +1,8 @@
-import { ReactElement, useMemo, useState } from "react"
+import { ReactElement, useEffect, useMemo, useState } from "react"
 
 import Head from 'next/head'
+import axios from 'axios'
+
 import { Badge, Box, Button, ButtonGroup, Flex, Grid, GridItem, Heading, IconButton, Menu, MenuButton, MenuDivider, MenuItemOption, MenuList, MenuOptionGroup, Select, Stack, TableContainer, Text } from '@chakra-ui/react'
 import { Table, Thead, Tbody, Tr, Th, Td, chakra } from '@chakra-ui/react'
 import { useColorModeValue } from '@chakra-ui/react'
@@ -10,7 +12,6 @@ import DashboardLayout from "../../component/layout/DashboardLayout"
 import { DebouncedInput, Filter } from "../../component/table/FormFilter"
 
 import { MemberState } from "../../utils/interface"
-import { MemberData } from "../../data/MemberData"
 import { MemberMenuComponent } from "../../component/table/MemberDataMenu"
 import { HideData } from "../../component/table/HiddenData"
 import { CondensedCard } from "../../component/Card"
@@ -19,24 +20,20 @@ import Link from "next/link"
 const MemberPage = () => {
   const bg = useColorModeValue('gray.50', 'gray.800');
 
+  const [member, setMember] = useState<MemberState[]>([])
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [filteredDate, setFilteredDate] = useState<string | 'day' | 'month' | 'year'>('month');
   const columnHelper = createColumnHelper<MemberState>();
 
   const data: MemberState[] = useMemo(
-    () => [...MemberData], [],
+    () => [...member], [member],
   )
 
   const columns = [
-    columnHelper.accessor('id', {
-      enableColumnFilter: false,
-      enableSorting: true,
-      cell: i => i.getValue()
-    }),
     columnHelper.accessor('name', {
       cell: i => (
-        <Link href={`/member/${i.row.original.id}`} passHref><Button size={'xs'} variant={'unstyled'}>{i.getValue()}</Button></Link>
+        <Link href={`/member/${i.row.original._id}`} passHref><Button size={'xs'} variant={'unstyled'}>{i.getValue()}</Button></Link>
       )
     }),
     columnHelper.accessor('class', {
@@ -77,6 +74,34 @@ const MemberPage = () => {
     totalData = table.getFilteredRowModel().rows.length;
     totalClass = uniqeClass != undefined ? uniqeClass.length : 0;
   }
+
+  useEffect(() => {
+    var mounted: boolean = true;
+
+    const query = `query { 
+      member { 
+        _id, 
+        name, 
+        class, 
+        phone, 
+        bio, 
+        role, 
+        _lastUpdate 
+      }
+    }`
+
+    const getMember = async () => {
+      await axios.post('/api/graphql', { query }).then(res => {
+        const member = res.data.data.member;
+        if (mounted) {
+          setMember([...member]);
+        }
+      })
+    }
+
+    getMember();
+    return () => { mounted = false; }
+  }, [])
 
   return (
     <Stack mt={4} gap={2}>

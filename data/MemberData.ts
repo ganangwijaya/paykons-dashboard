@@ -9,7 +9,8 @@ export const MemberData: MemberState[] = [
     phone: '+628567775555',
     bio: 'Hello! I am John',
     role: 1,
-    lastUpdate: '2022-01-03T13:00:00.000Z',
+    _id: '1',
+    _lastUpdate: '2022-01-03T13:00:00.000Z',
   },
   {
     id: 2,
@@ -19,7 +20,8 @@ export const MemberData: MemberState[] = [
     phone: '+628123456789',
     bio: 'Hello! I am Cena',
     role: 2,
-    lastUpdate: '2022-01-03T13:00:00.000Z',
+    _id: '1',
+    _lastUpdate: '2022-01-03T13:00:00.000Z',
   },
   {
     id: 3,
@@ -29,6 +31,7 @@ export const MemberData: MemberState[] = [
     phone: '+628123451234',
     bio: 'Hello! I am Hayo',
     role: 2,
-    lastUpdate: '2022-01-03T13:00:00.000Z',
+    _id: '1',
+    _lastUpdate: '2022-01-03T13:00:00.000Z',
   }
 ]

@@ -1,12 +1,13 @@
-import { ReactElement, useEffect, useMemo, useState } from "react"
+import React, { ReactElement, useEffect, useState } from "react"
 
 import Head from 'next/head'
-import { Alert, AlertDescription, AlertIcon, AlertTitle, Badge, Box, Button, chakra, Flex, FormControl, FormErrorMessage, FormHelperText, FormLabel, Grid, GridItem, Heading, IconButton, Input, InputGroup, InputLeftAddon, InputRightElement, List, ListItem, Menu, MenuButton, MenuDivider, MenuItemOption, MenuList, MenuOptionGroup, Select, Stack, Tab, TableContainer, TabList, TabPanel, TabPanels, Tabs, Text, Textarea } from '@chakra-ui/react'
+import { Alert, AlertDescription, AlertIcon, AlertTitle, Badge, Box, Button, chakra, Flex, FormControl, FormErrorMessage, FormLabel, Grid, GridItem, Heading, Input, InputGroup, InputLeftAddon, InputRightElement, List, ListItem, Select, Tab, TabList, TabPanel, TabPanels, Tabs, Text, Textarea } from '@chakra-ui/react'
 import { useColorModeValue } from '@chakra-ui/react'
 
 import DashboardLayout from "../../component/layout/DashboardLayout"
 import { MemberState } from "../../utils/interface"
 import { RoleData } from "../../data/RoleData"
+import axios from "axios"
 
 const AddMemberPage = () => {
   const bg = useColorModeValue('gray.50', 'gray.800');
@@ -24,22 +25,46 @@ const AddMemberPage = () => {
     phone: '',
     bio: '',
     role: 2,
-    lastUpdate: DateNow.toISOString(),
+    _id: '',
+    _lastUpdate: DateNow.toISOString(),
   }
   const [memberData, setMemberData] = useState<MemberState>(initialMemberData)
   const [confPass, setConfPass] = useState({ pass: '', confpass: '', same: false })
-  const [submitted, setSubmitted] = useState(false)
+  const [submitted, setSubmitted] = useState({ loading: false, submitted: false })
 
   const handleInputChange = (event: any) => {
     DateNow = new Date;
     setMemberData(d => ({ ...d, [event.target.name]: event.target.value, lastUpdate: DateNow.toISOString() }))
   }
 
-  const handleSubmitData = () => {
-    setTabIndex(3);
-    setSubmitted(true);
-    setMemberData(initialMemberData);
-    setConfPass({ pass: '', confpass: '', same: false });
+  const handleSubmitData = async () => {
+    setSubmitted(s => ({ ...s, loading: true }));
+
+    const query = `mutation Mutation {
+      addMember(
+        name: "${memberData.name}"
+        classData: ${memberData.class}
+        phone: "${memberData.phone}"
+        bio: "${memberData.bio}"
+        role: ${memberData.role}
+        _lastUpdate: "${memberData._lastUpdate}"
+      ) {
+        success
+        message
+      }
+    }`;
+
+    await axios.post('/api/graphql', { query }).then(
+      res => {
+        console.log(res.data.data.addMember);
+        if (res.data.data.addMember.success == true) {
+          setSubmitted({ loading: false, submitted: true });
+          setTabIndex(3);
+          setMemberData(initialMemberData);
+          setConfPass({ pass: '', confpass: '', same: false });
+        }
+      }
+    )
   }
 
   useEffect(() => {
@@ -202,14 +227,14 @@ const AddMemberPage = () => {
                       <Heading as={'h4'} size={'xs'}>Permission</Heading>
                       <List spacing={2} mt={2}>
                         {RoleData.filter(f => f.id == memberData.role).length > 0 && RoleData.filter(f => f.id == memberData.role).map((items, index) => (
-                          <>
+                          <React.Fragment key={index}>
                             {items.permission.map((p, i) => (
                               <ListItem key={i} display={'flex'} gap={2} fontSize={'xs'}>
                                 <Box color={'green.500'}><i className="ri-checkbox-circle-fill"></i></Box>
                                 {p.name}
                               </ListItem>
                             ))}
-                          </>
+                          </React.Fragment>
                         ))}
                       </List>
                     </Box>
@@ -217,7 +242,7 @@ const AddMemberPage = () => {
                 </Grid>
                 <Flex justifyContent={'space-between'} mt={6}>
                   <Button onClick={() => setTabIndex(i => i - 1)} size={'sm'} variant={'solid'} leftIcon={<i className="ri-arrow-left-s-line"></i>}>Previous</Button>
-                  <Button colorScheme={'blue'} isDisabled={!confPass.same} type={'submit'} size={'sm'} variant={'solid'} rightIcon={<i className="ri-arrow-right-s-line"></i>}>Next</Button>
+                  <Button isLoading={submitted.loading} loadingText={'Submitting'} colorScheme={'blue'} isDisabled={!confPass.same} type={'submit'} size={'sm'} variant={'solid'} rightIcon={<i className="ri-arrow-right-s-line"></i>}>Submit Data</Button>
                 </Flex>
               </form>
             </Box>

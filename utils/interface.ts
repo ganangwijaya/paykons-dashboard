@@ -16,7 +16,8 @@ export interface MemberState {
   phone: string,
   bio: string,
   role: number,
-  lastUpdate: string,
+  _id: string,
+  _lastUpdate: string,
 }
 
 export interface PayoutState {
