@@ -13,7 +13,7 @@ const LoginPage = () => {
   const cardBG = useColorModeValue('gray.50', 'gray.800');
 
   const [showPassword, setShowPassword] = useState(false);
-  const [loginData, setLoginData] = useState({ email: '', password: '' })
+  const [loginData, setLoginData] = useState({ email: '', password: '', remember: false })
   const [loginStatus, setLoginStatus] = useState({ success: false, message: '', show: false });
 
   const handleLogin = async () => {
@@ -23,6 +23,7 @@ const LoginPage = () => {
         redirect: false,
         email: loginData.email,
         password: loginData.password,
+        remember: loginData.remember,
         callbackUrl: `${window.location.origin}/dashboard`
       }
     )
@@ -61,12 +62,12 @@ const LoginPage = () => {
                 <Stack gap={2}>
                   <FormControl>
                     <FormLabel fontSize={'sm'}>Email address</FormLabel>
-                    <Input onChange={e => setLoginData(d => ({ ...d, email: e.target.value }))} size={'md'} type={'email'} rounded={'md'} />
+                    <Input value={loginData.email} onChange={e => setLoginData(d => ({ ...d, email: e.target.value }))} size={'md'} type={'email'} rounded={'md'} />
                   </FormControl>
                   <FormControl>
                     <FormLabel fontSize={'sm'}>Password</FormLabel>
                     <InputGroup>
-                      <Input onChange={e => setLoginData(d => ({ ...d, password: e.target.value }))} size={'md'} type={showPassword ? 'text' : 'password'} rounded={'md'} />
+                      <Input value={loginData.password} onChange={e => setLoginData(d => ({ ...d, password: e.target.value }))} size={'md'} type={showPassword ? 'text' : 'password'} rounded={'md'} />
                       <InputRightElement h={'100%'} w={'fit-content'} px={1}>
                         <Button size={'xs'} fontSize={'0.5rem'} onClick={() => setShowPassword(s => !s)}>
                           <i className="ri-eye-line"></i>
@@ -76,7 +77,7 @@ const LoginPage = () => {
                   </FormControl>
                   <Flex justifyContent={'space-between'}>
                     <FormControl display={'flex'} alignItems={'center'}>
-                      <Switch id={'remember-signin'} mr={3} />
+                      <Switch onChange={() => setLoginData(d => ({ ...d, remember: !d.remember }))} id={'remember-signin'} mr={3} size={'sm'} />
                       <FormLabel fontSize={'sm'} mb={'0'}>Remember me</FormLabel>
                     </FormControl>
                     <Box>
