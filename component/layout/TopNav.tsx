@@ -2,6 +2,7 @@ import { Box, Button, Flex, Heading, Menu, MenuButton, MenuList, MenuItem, MenuD
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink } from '@chakra-ui/react'
 import { useColorMode } from "@chakra-ui/react"
 import { css } from '@emotion/react';
+import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react"
 import { ChildMenu, DashboardMenu, PaymentMenu, PreferenceMenu } from "../../data/PageData";
@@ -34,6 +35,8 @@ const NormalNav = css`
 `
 
 const TopNav = () => {
+  const { data: session } = useSession();
+
   const { colorMode, toggleColorMode } = useColorMode()
   const [header, setHeader] = useState(false);
   const router = useRouter();
@@ -128,15 +131,15 @@ const TopNav = () => {
             <Avatar size={'sm'} src={'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&&h=200&w=200'} />
           </MenuButton>
           <MenuList color={useColorModeValue('gray.900', 'gray.100')} fontSize={'xs'}>
-            <MenuGroup ml={3} title={'Ganang'}>
+            <MenuGroup ml={3} title={String(session?.user?.name)}>
               <MenuItem>Profile</MenuItem>
             </MenuGroup>
             <MenuDivider />
             <MenuItem>Changelog</MenuItem>
             <MenuItem>Feedback</MenuItem>
-            <MenuItem>Help & Support</MenuItem>
+            <MenuItem>Help and Support</MenuItem>
             <MenuDivider />
-            <MenuItem>Logout</MenuItem>
+            <MenuItem onClick={() => signOut({ callbackUrl: `${window.location.origin}/auth` })}>Logout</MenuItem>
           </MenuList>
         </Menu>
       </Flex>

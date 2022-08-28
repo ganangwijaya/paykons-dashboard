@@ -2,12 +2,15 @@ import { ReactElement, useEffect } from "react"
 
 import Head from 'next/head'
 import dynamic from 'next/dynamic'
-import { Box, Button, Flex, Grid, GridItem, Heading, IconButton, Menu, MenuButton, MenuDivider, MenuGroup, MenuItem, MenuList, Stack, Text } from '@chakra-ui/react'
+import { GetServerSideProps } from "next"
+import { getSession } from "next-auth/react"
+
+import { Box, Flex, Grid, GridItem, Heading, IconButton, Menu, MenuButton, MenuItem, MenuList, Stack, Text } from '@chakra-ui/react'
 import { useColorModeValue } from '@chakra-ui/react'
 
 import DashboardLayout from "../component/layout/DashboardLayout"
-
 import { CashFlowChartData, MemberChartData } from "../data/ChartData"
+
 
 const ChartCashFlow = dynamic(
   () => import('../component/Chart'),
@@ -18,6 +21,24 @@ const ChartMember = dynamic(
   () => import('../component/Chart'),
   { ssr: false }
 )
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const session = await getSession(context);
+
+  if (!session) {
+    return {
+      redirect: {
+        destination: '/auth',
+        permanent: false
+      }
+    }
+  }
+  return {
+    props: {
+      session: session,
+    },
+  }
+}
 
 const DashboardPage = () => {
   const bg = useColorModeValue('gray.50', 'gray.800');

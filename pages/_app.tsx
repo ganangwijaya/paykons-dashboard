@@ -2,6 +2,7 @@ import type { ReactElement, ReactNode } from 'react'
 import { NextPage } from 'next'
 import type { AppProps } from 'next/app'
 import { ChakraProvider, ColorModeScript } from '@chakra-ui/react'
+import { SessionProvider } from "next-auth/react"
 import 'focus-visible/dist/focus-visible';
 
 import theme from '../styles/theme'
@@ -22,14 +23,16 @@ type AppPropsWithLayout = AppProps & {
   Component: NextPageWithLayout
 }
 
-function MyApp({ Component, pageProps }: AppPropsWithLayout) {
+function MyApp({ Component, pageProps: { session, ...pageProps } }: AppPropsWithLayout) {
   const getLayout = Component.getLayout ?? ((page) => page);
 
   return (
-    <ChakraProvider theme={theme}>
-      <ColorModeScript initialColorMode={theme.initialColorMode} />
-      {getLayout(<Component {...pageProps} />)}
-    </ChakraProvider>
+    <SessionProvider session={session}>
+      <ChakraProvider theme={theme}>
+        <ColorModeScript initialColorMode={theme.initialColorMode} />
+        {getLayout(<Component {...pageProps} />)}
+      </ChakraProvider>
+    </SessionProvider>
   )
 }
 

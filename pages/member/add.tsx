@@ -43,6 +43,8 @@ const AddMemberPage = () => {
     const query = `mutation Mutation {
       addMember(
         name: "${memberData.name}"
+        email: "${memberData.email}"
+        password: "${confPass.confpass}"
         classData: ${memberData.class}
         phone: "${memberData.phone}"
         bio: "${memberData.bio}"
@@ -56,7 +58,6 @@ const AddMemberPage = () => {
 
     await axios.post('/api/graphql', { query }).then(
       res => {
-        console.log(res.data.data.addMember);
         if (res.data.data.addMember.success == true) {
           setSubmitted({ loading: false, submitted: true });
           setTabIndex(3);
