@@ -36,7 +36,7 @@ const LoginPage = () => {
       setLoginStatus(s => ({ show: true, success: true, message: 'Login success, redirecting...' }))
       setTimeout(() => {
         Router.push('/dashboard');
-      }, 3000);
+      }, 1000);
     }
   }
 
@@ -49,10 +49,10 @@ const LoginPage = () => {
       </Head>
 
       <Flex h={'100vh'} w={'100vw'} bg={bg}>
-        <Flex w={'50%'} alignItems={'center'}>
+        <Flex w={{ base: '100%', md: '50%' }} alignItems={'center'}>
           <Container maxW={'md'}>
             <Heading fontSize={'3xl'} textAlign={'center'}>
-              Sign Inawdaw
+              Sign In
             </Heading>
             <Text fontSize={'md'} color={'gray.600'} textAlign={'center'}>
               to enjoy all of our cool features ✌️
@@ -98,7 +98,7 @@ const LoginPage = () => {
             </Flex>
           </Container>
         </Flex>
-        <Box w={'50%'}
+        <Box display={{ base: 'none', md: 'block' }} w={'50%'}
           bgImage={`url('https://images.unsplash.com/photo-1510146758428-e5e4b17b8b6a?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=820&q=80')`}
           bgSize={'cover'}
           bgPos={'right'}
@@ -106,7 +106,7 @@ const LoginPage = () => {
           h={'95vh'}
           borderBottomLeftRadius={'3xl'}
         >
-          <Box w={'full'} h={'full'} bg={'gray.800'} opacity={0.2}></Box>
+          <Box w={'full'} h={'full'} bg={'gray.800'} opacity={0.5}></Box>
         </Box>
       </Flex >
     </div >
