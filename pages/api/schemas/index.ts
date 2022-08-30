@@ -37,6 +37,8 @@ export const typeDefs = gql`
   }
 
   type Mutation {
-    addMember(name: String, email: String, password: String, classData: Int, phone: String, bio: String, role: Int, _lastUpdate: String): Message
+    addMember(name: String, email: String, password: String, classData: Int, phone: String, bio: String, role: Int, _lastUpdate: String): Message!
+    editMember(name: String, email: String, classData: Int, phone: String, bio: String): Message!
+    changePassword(email: String, oldPassword: String, newPassword: String): Message!
   }
   `

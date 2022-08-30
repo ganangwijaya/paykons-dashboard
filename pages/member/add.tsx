@@ -160,7 +160,7 @@ const AddMemberPage = () => {
                           </Button>
                         </InputRightElement>
                       </InputGroup>
-                      <FormErrorMessage fontSize={'xs'}>Both password must same.</FormErrorMessage>
+                      <FormErrorMessage fontSize={'xs'}>Both password must match.</FormErrorMessage>
                     </FormControl>
                   </GridItem>
                 </Grid>

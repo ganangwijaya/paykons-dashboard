@@ -39,6 +39,7 @@ const MemberDetailPage = () => {
       getMember(_id: "${memberid}") {
         _id
         name
+        email
         class
         phone
         bio
