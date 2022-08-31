@@ -3,6 +3,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink } from '@chakra-ui/react'
 import { useColorMode } from "@chakra-ui/react"
 import { css } from '@emotion/react';
 import { useSession, signOut } from "next-auth/react";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react"
 import { ChildMenu, DashboardMenu, PaymentMenu, PreferenceMenu } from "../../data/PageData";
@@ -132,7 +133,7 @@ const TopNav = () => {
           </MenuButton>
           <MenuList color={useColorModeValue('gray.900', 'gray.100')} fontSize={'xs'}>
             <MenuGroup ml={3} title={String(session?.user?.name)}>
-              <MenuItem>Profile</MenuItem>
+              <Link href={'/profile'} passHref><MenuItem>Profile</MenuItem></Link>
             </MenuGroup>
             <MenuDivider />
             <MenuItem>Changelog</MenuItem>

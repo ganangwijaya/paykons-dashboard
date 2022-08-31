@@ -67,7 +67,7 @@ const EditProfileModal = (props: { data: MemberState, handlerEdit: (data: Member
                 <FormControl>
                   <FormLabel fontSize={'sm'}>Phone</FormLabel>
                   <InputGroup size={'sm'}>
-                    <InputLeftAddon children={'+62'} />
+                    <InputLeftAddon>+62</InputLeftAddon>
                     <Input rounded={'md'} type={'tel'} value={updatedData.phone.replace(/[^\w\s]62/g, '')} name={'phone'} onChange={e => setUpdatedData(d => ({ ...d, phone: '+62' + e.target.value }))} />
                   </InputGroup>
                 </FormControl>

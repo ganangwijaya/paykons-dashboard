@@ -190,7 +190,7 @@ const AddMemberPage = () => {
                     <FormControl>
                       <FormLabel fontSize={'xs'}>Phone</FormLabel>
                       <InputGroup size={'sm'}>
-                        <InputLeftAddon children={'+62'} />
+                        <InputLeftAddon>+62</InputLeftAddon>
                         <Input type={'tel'} value={memberData.phone.replace(/[^\w\s]62/g, '')} name={'phone'} onChange={e => setMemberData(d => ({ ...d, phone: '+62' + e.target.value }))} />
                       </InputGroup>
                     </FormControl>
@@ -211,7 +211,7 @@ const AddMemberPage = () => {
           </TabPanel>
           <TabPanel>
             <Box p={6} bg={bg} rounded={'lg'}>
-              <Heading as={'h5'} size={'xs'}>Member's Roles</Heading>
+              <Heading as={'h5'} size={'xs'}>Member&apos;s Roles</Heading>
               <Text fontSize={'xs'} mt={1}>Member platform permission</Text>
               <form onSubmit={e => { e.preventDefault(); handleSubmitData(); }}>
                 <Grid templateColumns={{ base: 'repeat(1, 1fr)', md: 'repeat(2, 1fr)' }} gap={4} mt={4}>
