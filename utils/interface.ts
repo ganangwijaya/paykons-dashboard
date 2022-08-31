@@ -8,6 +8,19 @@ export interface DataState {
   status: 'confirmed' | 'unconfirmed',
 }
 
+export interface TransactionState {
+  _id: string,
+  name: string,
+  transactionDate: string,
+  amount: number,
+  pic: string,
+  evidence: string,
+  status: 'confirmed' | 'unconfirmed',
+  confirmedBy: string,
+  _lastUpdate: string,
+  _createdAt: string,
+}
+
 export interface MemberState {
   id: number,
   name: string,

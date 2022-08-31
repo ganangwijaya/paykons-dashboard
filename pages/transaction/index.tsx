@@ -1,40 +1,64 @@
-import { ReactElement, useMemo, useState } from "react"
+import { ReactElement, useEffect, useMemo, useState } from "react"
 
+import { GetServerSideProps } from "next"
 import Head from 'next/head'
+import { getSession, useSession } from "next-auth/react"
+
 import { Badge, Box, ButtonGroup, Flex, Grid, GridItem, Heading, IconButton, Menu, MenuButton, MenuDivider, MenuItemOption, MenuList, MenuOptionGroup, Select, Stack, TableContainer, Text } from '@chakra-ui/react'
 import { Table, Thead, Tbody, Tr, Th, Td, chakra } from '@chakra-ui/react'
-import { useColorModeValue } from '@chakra-ui/react'
+import { useColorModeValue, useToast } from '@chakra-ui/react'
 
 import { useReactTable, createColumnHelper, getCoreRowModel, flexRender, getSortedRowModel, SortingState, getFilteredRowModel, getFacetedRowModel, getFacetedUniqueValues, getFacetedMinMaxValues, ColumnFiltersState, getPaginationRowModel } from "@tanstack/react-table"
 
 import DashboardLayout from "../../component/layout/DashboardLayout"
-import { DataState } from "../../utils/interface"
-import { TransactionData } from "../../data/TransactionData"
-import { TransactionMenuComponent } from "../../component/table/TransactionDataMenu"
+import { TransactionState } from "../../utils/interface"
+import { AddDataModal, TransactionMenuComponent } from "../../component/table/TransactionDataMenu"
 import { DebouncedInput, Filter } from "../../component/table/FormFilter"
+import axios from "axios"
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const session = await getSession(context);
+
+  if (!session) {
+    return {
+      redirect: {
+        destination: '/auth',
+        permanent: false
+      }
+    }
+  }
+
+  console.log('session', session);
+
+  return {
+    props: {
+      session: session,
+    },
+  }
+}
 
 const TransactionPage = () => {
+  const { data: session } = useSession();
+
   const bg = useColorModeValue('gray.50', 'gray.800');
   const iconBG = useColorModeValue('blue.500', 'blue.400');
   const iconColor = useColorModeValue('gray.100', 'gray.100');
   const increaseColor = useColorModeValue('green.500', 'green.400');
   const decreaseColor = useColorModeValue('red.500', 'red.400');
+  const toast = useToast()
 
+  const [transaction, setTransaction] = useState<TransactionState[]>([])
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [filteredDate, setFilteredDate] = useState<string | 'day' | 'month' | 'year'>('month');
-  const columnHelper = createColumnHelper<DataState>();
+  const columnHelper = createColumnHelper<TransactionState>();
+  const [reRender, setReRender] = useState(false)
 
-  const data: DataState[] = useMemo(
-    () => [...TransactionData], [],
+  const data: TransactionState[] = useMemo(
+    () => [...transaction], [transaction],
   )
 
   const columns = [
-    columnHelper.accessor('id', {
-      enableColumnFilter: false,
-      enableSorting: true,
-      cell: i => i.getValue()
-    }),
     columnHelper.accessor('name', {
       cell: i => i.getValue()
     }),
@@ -45,9 +69,9 @@ const TransactionPage = () => {
       header: 'Date',
       cell: i => new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(i.getValue()))
     }),
-    columnHelper.accessor('pic', {
-      cell: i => i.getValue()
-    }),
+    // columnHelper.accessor('pic', {
+    //   cell: i => i.getValue()
+    // }),
     columnHelper.accessor('status', {
       filterFn: 'equals',
       cell: i => (
@@ -87,6 +111,77 @@ const TransactionPage = () => {
       totalUnconfirmed = d.original.status == 'unconfirmed' ? totalUnconfirmed + 1 : totalUnconfirmed;
     })
   }
+
+  const submitTransaction = async (data: TransactionState) => {
+    const querySubmit = `mutation Mutation {
+      addTransaction(
+        name: "${data.name}"
+        transactionDate: "${data.transactionDate}"
+        amount: ${data.amount}
+        pic: "${session?.user?.email}"
+        evidence: "${data.evidence}"
+        status: "unconfirmed"
+      ) {
+        success
+        message
+      }
+    }`
+
+    await axios.post('/api/graphql', { query: querySubmit }).then(res => {
+      const transaction = res.data.data.addTransaction;
+      if (res.data.data.addTransaction.success == true) {
+        toast({
+          title: 'Transaction Data Submitted',
+          description: `${res.data.data.addTransaction.message}`,
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+          position: 'top-right',
+        });
+        setReRender(r => !r);
+      } else {
+        toast({
+          title: 'Error',
+          description: `${res.data.data.addTransaction.message}`,
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+          position: 'top-right',
+        });
+      }
+    })
+  }
+
+  useEffect(() => {
+    var mounted: boolean = true;
+
+    const query = `query Query {
+      transactions {
+        _id
+        name
+        transactionDate
+        amount
+        pic
+        status
+        confirmedBy
+        evidence
+        _lastUpdate
+        _createdAt
+      }
+    }`
+
+    const getTransaction = async () => {
+      await axios.post('/api/graphql', { query }).then(res => {
+        const transactions = res.data.data.transactions;
+        if (mounted) {
+          setTransaction([...transactions]);
+        }
+      })
+    }
+
+    getTransaction();
+    return () => { mounted = false; }
+  }, [reRender])
 
   return (
     <Stack mt={4} gap={2}>
@@ -152,20 +247,9 @@ const TransactionPage = () => {
               {/* <Text fontSize={'xs'}>Monthly cashflow overview.</Text> */}
             </Box>
             <Box>
-              <Menu closeOnSelect={false}>
-                <MenuButton as={IconButton} size={'xs'} icon={<i className="ri-more-fill"></i>} />
-                <MenuList fontSize={'xs'}>
-                  <MenuOptionGroup textTransform={'capitalize'} fontSize={12} value={filteredDate} onChange={(value: string | string[]) => setFilteredDate(String(value))} title='Filter By' type={'radio'}>
-                    <MenuItemOption value='day'>Day</MenuItemOption>
-                    <MenuItemOption value='month'>Month</MenuItemOption>
-                    <MenuItemOption value='year'>Year</MenuItemOption>
-                    <Box p={2} ml={2}>
-                      <Filter type={filteredDate == 'day' ? 'date' : filteredDate == 'month' ? 'month' : 'select'} column={table.getColumn('transactionDate')} table={table} />
-                    </Box>
-                    {columnFilters.length > 0 && <MenuItemOption onClick={() => setColumnFilters([])} icon={<i className="ri-format-clear"></i>}>Clear Filter</MenuItemOption>}
-                  </MenuOptionGroup>
-                </MenuList>
-              </Menu>
+              <ButtonGroup>
+                <AddDataModal handlerSubmit={(submitTransactionData: TransactionState) => submitTransaction(submitTransactionData)} />
+              </ButtonGroup>
             </Box>
           </Flex>
           <Box mt={6} overflow={'hidden'} pb={2}>
@@ -297,6 +381,8 @@ const TransactionPage = () => {
 }
 
 TransactionPage.getLayout = (page: ReactElement) => {
+
+
   return (
     <>
       <Head>

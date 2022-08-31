@@ -11,10 +11,17 @@ export const resolvers = {
       const member = await db.collection("member").find().toArray();
       return [...member]
     },
-    getMember: async (_: any, { _id }: { _id: string }) => {
+    getMember: async (_: any, { _id, email }: { _id: string, email: string }) => {
       let { db } = await connectToDatabase();
-      const member = await db.collection("member").find({ _id: new ObjectId(_id) }).toArray();
-      return member
+
+      if (email == "") {
+        const member = await db.collection("member").findOne({ _id: new ObjectId(_id) });
+        return member
+      }
+      else {
+        const member = await db.collection("member").findOne({ email: email });
+        return member
+      }
     },
     getAuth: async (_: any, { email, password }: { email: string, password: string }) => {
       let { db } = await connectToDatabase();
@@ -36,6 +43,11 @@ export const resolvers = {
           return ({ status: { success: false, message: 'Incorrect password.' } })
         }
       }
+    },
+    transactions: async () => {
+      let { db } = await connectToDatabase();
+      const transaction = await db.collection("transaction").find().toArray();
+      return [...transaction]
     }
   },
   Mutation: {
@@ -93,6 +105,15 @@ export const resolvers = {
         }
       } else {
         return ({ success: false, message: 'User not found.' })
+      }
+    },
+    addTransaction: async (_: any, { name, transactionDate, amount, pic, evidence, status }: { name: string, transactionDate: string, amount: number, pic: string, evidence: string, status: string }) => {
+      let { db } = await connectToDatabase();
+      try {
+        await db.collection("transaction").insertOne({ name, transactionDate, amount, pic, evidence, status, _lastUpdate: DateNow.toISOString(), _createdAt: DateNow.toISOString() });
+        return ({ success: true, message: 'Transaction data submitted.' })
+      } catch (error) {
+        return ({ success: false, message: error })
       }
     }
   }

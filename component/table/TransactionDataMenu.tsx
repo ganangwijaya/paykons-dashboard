@@ -1,8 +1,9 @@
-import { AlertDialog, AlertDialogBody, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogOverlay, Button, ButtonGroup, FormControl, FormLabel, IconButton, Image, Input, InputGroup, InputLeftAddon, InputLeftElement, InputRightElement, Menu, MenuButton, MenuDivider, MenuGroup, MenuItem, MenuItemOption, MenuList, MenuOptionGroup, Modal, ModalCloseButton, ModalContent, ModalOverlay, NumberDecrementStepper, NumberIncrementStepper, NumberInput, NumberInputField, NumberInputStepper, Stack, useDisclosure, useToast } from "@chakra-ui/react"
-import { useRef, useState } from "react"
-import { DataState } from "../../utils/interface";
+import { AlertDialog, AlertDialogBody, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogOverlay, Badge, Button, ButtonGroup, chakra, Divider, FormControl, FormLabel, Grid, GridItem, IconButton, Image, Input, InputGroup, InputLeftAddon, InputLeftElement, InputRightElement, Menu, MenuButton, MenuDivider, MenuGroup, MenuItem, MenuItemOption, MenuList, MenuOptionGroup, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, NumberDecrementStepper, NumberIncrementStepper, NumberInput, NumberInputField, NumberInputStepper, Stack, useDisclosure, useToast } from "@chakra-ui/react"
+import axios from "axios";
+import { useEffect, useRef, useState } from "react"
+import { MemberState, TransactionState } from "../../utils/interface";
 
-const ConfirmData = ({ data }: { data: DataState }) => {
+const ConfirmData = ({ data }: { data: TransactionState }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const toast = useToast()
   const cancelRef = useRef() as React.MutableRefObject<HTMLButtonElement>;
@@ -35,7 +36,7 @@ const ConfirmData = ({ data }: { data: DataState }) => {
                       onClose();
                       toast({
                         title: 'Transaction Data Confirmed',
-                        description: `Transaction Data with ID ${data.id} has successfully confirmed.`,
+                        description: `Transaction Data with ID ${data._id} has successfully confirmed.`,
                         status: 'success',
                         duration: 3000,
                         isClosable: true,
@@ -55,7 +56,7 @@ const ConfirmData = ({ data }: { data: DataState }) => {
   )
 }
 
-const DeleteData = ({ data }: { data: DataState }) => {
+const DeleteData = ({ data }: { data: TransactionState }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const toast = useToast()
 
@@ -89,7 +90,7 @@ const DeleteData = ({ data }: { data: DataState }) => {
                       onClose();
                       toast({
                         title: 'Transaction Data Deleted',
-                        description: `Transaction Data with ID ${data.id} has successfully deleted.`,
+                        description: `Transaction Data with ID ${data._id} has successfully deleted.`,
                         status: 'error',
                         duration: 3000,
                         isClosable: true,
@@ -110,13 +111,13 @@ const DeleteData = ({ data }: { data: DataState }) => {
   )
 }
 
-const EditData = ({ data }: { data: DataState }) => {
+const EditData = ({ data }: { data: TransactionState }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const toast = useToast()
 
   const cancelRef = useRef() as React.MutableRefObject<HTMLButtonElement>;
 
-  const [updatedData, setUpdatedData] = useState<DataState>(data);
+  const [updatedData, setUpdatedData] = useState<TransactionState>(data);
 
   const handleInputChange = (event: any) => {
     setUpdatedData(s => ({ ...s, [event.target.name]: event.target.value }))
@@ -187,7 +188,7 @@ const EditData = ({ data }: { data: DataState }) => {
                       onClose();
                       toast({
                         title: 'Transaction Data Updated',
-                        description: `Transaction Data with ID ${data.id} has successfully updated.`,
+                        description: `Transaction Data with ID ${data._id} has successfully updated.`,
                         status: 'info',
                         duration: 3000,
                         isClosable: true,
@@ -207,7 +208,7 @@ const EditData = ({ data }: { data: DataState }) => {
   )
 }
 
-const ViewImage = ({ data }: { data: DataState }) => {
+const ViewImage = ({ data }: { data: TransactionState }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
 
   return (
@@ -217,20 +218,207 @@ const ViewImage = ({ data }: { data: DataState }) => {
         <ModalOverlay />
         <ModalContent>
           <ModalCloseButton />
-          <Image src="https://picsum.photos/960/540"></Image>
+          <Image src={data.evidence}></Image>
         </ModalContent>
       </Modal>
     </>
   )
 }
 
-export const TransactionMenuComponent = ({ data }: { data: DataState }) => {
+const ViewDetail = ({ data }: { data: TransactionState }) => {
+  const { isOpen, onOpen, onClose } = useDisclosure()
+
+  const [pic, setPic] = useState<MemberState>()
+  const [confirmedBy, setConfirmedBy] = useState<MemberState>()
+
+  useEffect(() => {
+    var mounted: boolean = true;
+
+    const queryPic = `query Query {
+      getMember(email: "${data.pic}", _id: "") {
+        name
+      }
+    }`
+
+    const queryConfirmedby = `query Query {
+      getMember(email: "${data.confirmedBy}", _id: "") {
+        name
+      }
+    }`
+
+    const getPic = async () => {
+      await axios.post('/api/graphql', { query: queryPic }).then(res => {
+        const member = res.data.data.getMember;
+        if (mounted) {
+          setPic(member);
+        }
+      })
+    }
+
+    const getConfirmedby = async () => {
+      await axios.post('/api/graphql', { query: queryConfirmedby }).then(res => {
+        const member = res.data.data.getMember;
+        if (mounted) {
+          setConfirmedBy(member);
+        }
+      })
+    }
+
+    if (isOpen) {
+      getPic();
+      getConfirmedby()
+    }
+
+    return () => { mounted = false; }
+  }, [data.pic, data.confirmedBy, isOpen])
+
+  return (
+    <>
+      <MenuItem onClick={onOpen} icon={<i className="ri-bill-line"></i>}>View Detail</MenuItem>
+      <Modal size={'xl'} onClose={onClose} isOpen={isOpen} scrollBehavior={'inside'} isCentered>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Transaction Detail</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Stack gap={1} fontSize={'sm'} divider={<Divider />}>
+              <Grid templateColumns={{ base: 'repeat(4, 1fr)' }}>
+                <GridItem>Name</GridItem>
+                <GridItem colSpan={3}>: {data.name}</GridItem>
+              </Grid>
+              <Grid templateColumns={{ base: 'repeat(4, 1fr)' }}>
+                <GridItem>Amount</GridItem>
+                <GridItem colSpan={3}>: {Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, notation: 'standard' }).format(data.amount)}</GridItem>
+              </Grid>
+              <Grid templateColumns={{ base: 'repeat(4, 1fr)' }}>
+                <GridItem>Date</GridItem>
+                <GridItem colSpan={3}>: {Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(data.transactionDate))}</GridItem>
+              </Grid>
+              <Grid templateColumns={{ base: 'repeat(4, 1fr)' }}>
+                <GridItem>PIC</GridItem>
+                <GridItem colSpan={3}>: {pic?.name}</GridItem>
+              </Grid>
+              <Grid templateColumns={{ base: 'repeat(4, 1fr)' }}>
+                <GridItem>Status</GridItem>
+                <GridItem colSpan={3}>: {data.status == 'confirmed' ?
+                  <><Badge colorScheme={'green'} fontSize={10}>{data.status}</Badge> by {confirmedBy?.name}</>
+                  : <Badge colorScheme={'red'} fontSize={10}>{data.status}</Badge>}</GridItem>
+              </Grid>
+              <Grid templateColumns={{ base: 'repeat(4, 1fr)' }}>
+                <GridItem>Evidence</GridItem>
+                <GridItem colSpan={3}>: {data.evidence}</GridItem>
+              </Grid>
+              <Grid templateColumns={{ base: 'repeat(4, 1fr)' }}>
+                <GridItem>Last Update</GridItem>
+                <GridItem colSpan={3}>: {Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'long' }).format(new Date(data._lastUpdate))}</GridItem>
+              </Grid>
+              <Grid templateColumns={{ base: 'repeat(4, 1fr)' }}>
+                <GridItem>Created</GridItem>
+                <GridItem colSpan={3}>: {Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'long' }).format(new Date(data._createdAt))}</GridItem>
+              </Grid>
+            </Stack>
+          </ModalBody>
+          <ModalFooter><Button onClick={onClose} size={'sm'} colorScheme={'blue'}>Close</Button></ModalFooter>
+        </ModalContent>
+      </Modal>
+    </>
+  )
+}
+
+export const AddDataModal = (props: { handlerSubmit: (data: TransactionState) => Promise<void> }) => {
+  const { isOpen, onOpen, onClose } = useDisclosure()
+
+  const initialTransacionData: TransactionState = {
+    _id: '',
+    name: '',
+    transactionDate: '',
+    amount: 0,
+    pic: '',
+    evidence: '',
+    status: 'unconfirmed',
+    confirmedBy: '',
+    _lastUpdate: '',
+    _createdAt: '',
+  }
+
+  const [transactionData, setTransactionData] = useState<TransactionState>(initialTransacionData);
+
+  const handleSubmit = () => {
+    props.handlerSubmit(transactionData);
+
+    setTransactionData(initialTransacionData);
+    onClose();
+  }
+
+  const handleInputChange = (event: any) => {
+    setTransactionData(d => ({ ...d, [event.target.name]: event.target.value }))
+  }
+
+  return (
+    <>
+      <Button onClick={onOpen} w={{ base: '100%', md: 'auto' }} size={'sm'} fontWeight={'medium'} leftIcon={<i className="ri-add-line"></i>} variant={'outline'}>Add Transaction</Button>
+      <Modal size={'xl'} onClose={onClose} isOpen={isOpen} scrollBehavior={'inside'} isCentered>
+        <ModalOverlay />
+        <chakra.form onSubmit={e => { e.preventDefault(); handleSubmit(); }}>
+          <ModalContent>
+            <ModalHeader>Transaction Detail</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <Stack>
+                <FormControl isRequired>
+                  <FormLabel fontSize={'sm'}>Transaction Name</FormLabel>
+                  <Input type={'text'} size={'sm'} value={transactionData.name} name={'name'} onChange={e => handleInputChange(e)} rounded={'md'} />
+                </FormControl>
+                <FormControl isRequired>
+                  <FormLabel fontSize={'sm'}>Amount</FormLabel>
+                  <InputGroup size={'sm'}>
+                    <InputLeftAddon rounded={'md'}>Rp</InputLeftAddon>
+                    <Input type={'text'} name={'amount'} rounded={'md'}
+                      value={transactionData.amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
+                      onChange={(e) => {
+                        var ea = e.target.value.replace(/[^0-9\.-]+/g, '');
+                        ea = ea.replace(/\./g, '');
+                        setTransactionData(d => ({ ...d, amount: isNaN(Number(ea)) ? 0 : Number(ea) }))
+                      }} />
+                    <InputRightElement height={'100%'} p={0}>
+                      <Stack gap={0}>
+                        <IconButton aria-label={"increment-stepper"} h={3} fontSize={10} icon={<i className="ri-arrow-up-s-fill"></i>} size={'xs'} variant={'unstyled'} onClick={(e) => { e.preventDefault(); setTransactionData(d => ({ ...d, amount: d.amount + 1000 })); }}></IconButton>
+                        <IconButton mt={'0!important'} aria-label={"decrement-stepper"} h={3} fontSize={10} icon={<i className="ri-arrow-down-s-fill"></i>} size={'xs'} variant={'unstyled'} onClick={(e) => { e.preventDefault(); setTransactionData(d => ({ ...d, amount: d.amount - 1000 })); }}></IconButton>
+                      </Stack>
+                    </InputRightElement>
+                  </InputGroup>
+                </FormControl>
+                <FormControl isRequired mt={4} >
+                  <FormLabel fontSize={'sm'}>Transaction Date</FormLabel>
+                  <Input type={'date'} size={'sm'} value={transactionData.transactionDate} name={'transactionDate'} onChange={e => handleInputChange(e)} rounded={'md'} />
+                </FormControl>
+                <FormControl isRequired>
+                  <FormLabel fontSize={'sm'}>Transaction Evidence</FormLabel>
+                  <Input type={'text'} size={'sm'} value={transactionData.evidence} name={'evidence'} onChange={e => handleInputChange(e)} rounded={'md'} />
+                </FormControl>
+              </Stack>
+            </ModalBody>
+            <ModalFooter>
+              <ButtonGroup size={'sm'}>
+                <Button onClick={onClose}>Close</Button>
+                <Button type={'submit'} colorScheme={'blue'}>Submit</Button>
+              </ButtonGroup>
+            </ModalFooter>
+          </ModalContent>
+        </chakra.form>
+      </Modal>
+    </>
+  )
+}
+
+export const TransactionMenuComponent = ({ data }: { data: TransactionState }) => {
   return (
     <>
       <Menu>
         <MenuButton as={IconButton} variant={'ghost'} size={'xs'} icon={<i className="ri-more-2-line"></i>} />
         <MenuList fontSize={'xs'}>
           <ViewImage data={data} />
+          <ViewDetail data={data} />
           <MenuDivider />
           <ConfirmData data={data} />
           <EditData data={data} />
