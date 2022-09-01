@@ -18,12 +18,14 @@ const NavItem = ({ icon, text, url, isOpen }: NavItemProps) => {
   const iconColor = useColorModeValue('blue.500', 'gray.100');
   const iconColorActive = useColorModeValue('gray.100', 'gray.100');
 
+  const parentpath = "/" + router.pathname.split("/")[1];
+
   return (
     <Link href={url}>
       <Button variant={'unstyled'} size={'sm'} _focus={{ boxShadow: 'none' }}>
         <Tooltip label={text} placement={'right'} size={'xs'} isDisabled={isOpen ? true : false}>
           <Flex alignItems={'center'} cursor={'pointer'} p={1.5} role={'group'}>
-            <Flex color={router.pathname == url ? 'gray.100' : iconColor} w={6} h={6} minW={6} alignItems={'center'} justifyContent={'center'} fontSize={'md'} fontWeight={'light'} bg={router.pathname == url ? 'blue.400' : iconBG} _groupHover={{ bg: 'blue.400', color: iconColorActive }} transition={'all 0.2s ease-in'} rounded={'md'}><i className={icon}></i></Flex>
+            <Flex color={parentpath == url ? 'gray.100' : iconColor} w={6} h={6} minW={6} alignItems={'center'} justifyContent={'center'} fontSize={'md'} fontWeight={'light'} bg={parentpath == url ? 'blue.400' : iconBG} _groupHover={{ bg: 'blue.400', color: iconColorActive }} transition={'all 0.2s ease-in'} rounded={'md'}><i className={icon}></i></Flex>
             <AnimatePresence initial={false}>
               {isOpen &&
                 <motion.div

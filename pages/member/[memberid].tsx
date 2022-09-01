@@ -36,7 +36,7 @@ const MemberDetailPage = () => {
   useEffect(() => {
     var mounted: boolean = true;
     const query = `query {
-      getMember(_id: "${memberid}") {
+      getMember(_id: "${memberid}", email: "") {
         _id
         name
         email
@@ -50,7 +50,7 @@ const MemberDetailPage = () => {
 
     const getMember = async () => {
       await axios.post(`/api/graphql`, { query }).then(res => {        
-        const member = res.data.data.getMember[0];
+        const member = res.data.data.getMember;
         if (mounted) {
           setMember(member);
         }
@@ -62,7 +62,7 @@ const MemberDetailPage = () => {
     }
 
     return () => { }
-  }, [memberid])
+  }, [memberid])  
 
   useEffect(() => {
     if (member.id != 0) {

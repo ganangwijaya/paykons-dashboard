@@ -2,6 +2,7 @@ import { ReactElement, useEffect, useMemo, useState } from "react"
 
 import { GetServerSideProps } from "next"
 import Head from 'next/head'
+import axios from "axios"
 import { getSession, useSession } from "next-auth/react"
 
 import { Badge, Box, ButtonGroup, Flex, Grid, GridItem, Heading, IconButton, Menu, MenuButton, MenuDivider, MenuItemOption, MenuList, MenuOptionGroup, Select, Stack, TableContainer, Text } from '@chakra-ui/react'
@@ -14,7 +15,7 @@ import DashboardLayout from "../../component/layout/DashboardLayout"
 import { TransactionState } from "../../utils/interface"
 import { AddDataModal, TransactionMenuComponent } from "../../component/table/TransactionDataMenu"
 import { DebouncedInput, Filter } from "../../component/table/FormFilter"
-import axios from "axios"
+import { CondensedCard } from "../../component/Card"
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const session = await getSession(context);
@@ -314,34 +315,10 @@ const TransactionPage = () => {
     <Stack mt={4} gap={2}>
       <Grid templateColumns={'repeat(4, 1fr)'} gap={4}>
         <GridItem colSpan={{ base: 4, md: 2, lg: 1 }} minW={0}>
-          <Flex p={4} bg={bg} rounded={'xl'} gap={4} alignItems={'center'}>
-            <Flex minW={10} w={10} h={10} bg={iconBG} color={iconColor} justifyContent={'center'} alignItems={'center'} rounded={'full'} fontSize={'xl'}><i className="ri-wallet-3-fill"></i></Flex>
-            <Box>
-              <Text fontSize={'xs'}>Total Amount</Text>
-              <Flex gap={1} alignItems={'flex-end'}>
-                <Heading as={'h4'} size={'md'}>{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, notation: 'standard' }).format(totalamount)}</Heading>
-                <Flex fontSize={10} color={increaseColor} alignItems={'center'}>
-                  <i className="ri-arrow-up-s-fill"></i>
-                  <Text fontWeight={'bold'}>10%</Text>
-                </Flex>
-              </Flex>
-            </Box>
-          </Flex>
+          <CondensedCard name={'Total Amount'} data={Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, notation: 'standard' }).format(totalamount)} icon={'ri-wallet-3-fill'} />
         </GridItem>
         <GridItem colSpan={{ base: 4, md: 2, lg: 1 }} minW={0}>
-          <Flex p={4} bg={bg} rounded={'xl'} gap={4} alignItems={'center'}>
-            <Flex minW={10} w={10} h={10} bg={iconBG} color={iconColor} justifyContent={'center'} alignItems={'center'} rounded={'full'} fontSize={'xl'}><i className="ri-file-list-3-fill"></i></Flex>
-            <Box>
-              <Text fontSize={'xs'}>Total Data</Text>
-              <Flex gap={1} alignItems={'flex-end'}>
-                <Heading as={'h4'} size={'md'}>{totalData}</Heading>
-                <Flex fontSize={10} color={increaseColor} alignItems={'center'}>
-                  <i className="ri-arrow-up-s-fill"></i>
-                  <Text fontWeight={'bold'}>10%</Text>
-                </Flex>
-              </Flex>
-            </Box>
-          </Flex>
+          <CondensedCard name={'Total Data'} data={totalData} icon={'ri-file-list-3-fill'} />
         </GridItem>
         <GridItem colSpan={{ base: 4, md: 2, lg: 1 }} minW={0}>
           <Flex cursor={'pointer'} onClick={() => setColumnFilters([{ id: 'status', value: 'confirmed' }])} p={4} bg={bg} boxShadow={columnFilters.length > 0 ? columnFilters[0].value == 'confirmed' ? 'darkGreen' : 'green' : 'green'} _hover={{ boxShadow: 'darkGreen' }} transition={'all 0.3s ease-in-out'} rounded={'xl'} gap={4} alignItems={'center'}>
@@ -371,7 +348,7 @@ const TransactionPage = () => {
           <Flex justifyContent={'space-between'}>
             <Box>
               <Heading as={'h4'} size={'md'}>Transaction Data</Heading>
-              {/* <Text fontSize={'xs'}>Monthly cashflow overview.</Text> */}
+              <Text fontSize={'xs'}>List all of transaction data.</Text>
             </Box>
             <Box>
               <ButtonGroup>
