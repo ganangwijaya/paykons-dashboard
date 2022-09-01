@@ -28,8 +28,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }
   }
 
-  console.log('session', session);
-
   return {
     props: {
       session: session,
@@ -53,64 +51,14 @@ const TransactionPage = () => {
   const [filteredDate, setFilteredDate] = useState<string | 'day' | 'month' | 'year'>('month');
   const columnHelper = createColumnHelper<TransactionState>();
   const [reRender, setReRender] = useState(false)
-
   const data: TransactionState[] = useMemo(
     () => [...transaction], [transaction],
   )
-
-  const columns = [
-    columnHelper.accessor('name', {
-      cell: i => i.getValue()
-    }),
-    columnHelper.accessor('amount', {
-      cell: i => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, notation: 'compact' }).format(i.getValue())
-    }),
-    columnHelper.accessor('transactionDate', {
-      header: 'Date',
-      cell: i => new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(i.getValue()))
-    }),
-    // columnHelper.accessor('pic', {
-    //   cell: i => i.getValue()
-    // }),
-    columnHelper.accessor('status', {
-      filterFn: 'equals',
-      cell: i => (
-        <Badge colorScheme={i.getValue() == 'confirmed' ? 'green' : 'red'} fontSize={10}>{i.getValue()}</Badge>
-      )
-    }),
-    columnHelper.display({
-      header: '',
-      id: 'action',
-      enableSorting: false,
-      cell: i => (
-        <TransactionMenuComponent data={i.row.original} />
-      ),
-    }),
-  ]
-
-  const table = useReactTable({
-    data, columns, state: { sorting, columnFilters },
-    onColumnFiltersChange: setColumnFilters, getFilteredRowModel: getFilteredRowModel(),
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
-    getFacetedMinMaxValues: getFacetedMinMaxValues(),
-    onSortingChange: setSorting, getSortedRowModel: getSortedRowModel(),
-    getCoreRowModel: getCoreRowModel(), getPaginationRowModel: getPaginationRowModel(),
-  })
 
   var totalamount: number = 0;
   var totalData: number = 0;
   var totalConfirmed: number = 0;
   var totalUnconfirmed: number = 0;
-
-  if (table.getFilteredRowModel().rows.length > 0) {
-    totalData = table.getFilteredRowModel().rows.length;
-    table.getFilteredRowModel().rows.map(d => {
-      totalamount = totalamount + d.original.amount;
-      totalConfirmed = d.original.status == 'confirmed' ? totalConfirmed + 1 : totalConfirmed;
-      totalUnconfirmed = d.original.status == 'unconfirmed' ? totalUnconfirmed + 1 : totalUnconfirmed;
-    })
-  }
 
   const submitTransaction = async (data: TransactionState) => {
     const querySubmit = `mutation Mutation {
@@ -149,6 +97,185 @@ const TransactionPage = () => {
           position: 'top-right',
         });
       }
+    })
+  }
+
+  const editTransaction = async (data: TransactionState) => {
+    const queryConfirm = `mutation Mutation {
+      editTransaction(
+        _id: "${data._id}"
+        name: null
+        status: "confirmed"
+        pic: "${data.pic}"
+      ) {
+        success
+        message
+      }
+    }`
+
+    const queryEdit = `mutation Mutation {
+      editTransaction(
+        _id: "${data._id}"
+        name: "${data.name}"
+        transactionDate: "${data.transactionDate}"
+        amount: ${data.amount}
+        pic: "${data.pic}"
+        evidence: "${data.evidence}"
+        status: "${data.status}"
+      ) {
+        success
+        message
+      }
+    }`
+
+    await axios.post('/api/graphql', { query: queryEdit }).then(res => {
+      const transaction = res.data.data.editTransaction;
+      if (transaction.success == true) {
+        toast({
+          title: 'Transaction Data Updated',
+          description: `${transaction.message}`,
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+          position: 'top-right',
+        });
+        setReRender(r => !r);
+      } else {
+        toast({
+          title: 'Error',
+          description: `${transaction.message}`,
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+          position: 'top-right',
+        });
+      }
+    })
+  }
+
+  const confirmTransaction = async (data: TransactionState) => {
+    const queryConfirm = `mutation Mutation {
+      editTransaction(
+        _id: "${data._id}"
+        name: null
+        status: "confirmed"
+        pic: "${session?.user?.email}"
+      ) {
+        success
+        message
+      }
+    }`
+
+    await axios.post('/api/graphql', { query: queryConfirm }).then(res => {
+      const transaction = res.data.data.editTransaction;
+      if (transaction.success == true) {
+        toast({
+          title: 'Transaction Data Updated',
+          description: `${transaction.message}`,
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+          position: 'top-right',
+        });
+        setReRender(r => !r);
+      } else {
+        toast({
+          title: 'Error',
+          description: `${transaction.message}`,
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+          position: 'top-right',
+        });
+      }
+    })
+  }
+
+  const deleteTransaction = async (data: TransactionState) => {
+    const queryDelete = `mutation Mutation {
+      deleteTransaction(
+        _id: "${data._id}"
+      ) {
+        success
+        message
+      }
+    }`
+
+    await axios.post('/api/graphql', { query: queryDelete }).then(res => {
+      const transaction = res.data.data.deleteTransaction;
+      if (transaction.success == true) {
+        toast({
+          title: 'Transaction Data Deleted.',
+          description: `${transaction.message}`,
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+          position: 'top-right',
+        });
+        setReRender(r => !r);
+      } else {
+        toast({
+          title: 'Error',
+          description: `${transaction.message}`,
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+          position: 'top-right',
+        });
+      }
+    })
+  }
+
+  const columns = [
+    columnHelper.accessor('name', {
+      cell: i => i.getValue()
+    }),
+    columnHelper.accessor('amount', {
+      cell: i => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, notation: 'compact' }).format(i.getValue())
+    }),
+    columnHelper.accessor('transactionDate', {
+      header: 'Date',
+      cell: i => new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(i.getValue()))
+    }),
+    // columnHelper.accessor('pic', {
+    //   cell: i => i.getValue()
+    // }),
+    columnHelper.accessor('status', {
+      filterFn: 'equals',
+      cell: i => (
+        <Badge colorScheme={i.getValue() == 'confirmed' ? 'green' : 'red'} fontSize={10}>{i.getValue()}</Badge>
+      )
+    }),
+    columnHelper.display({
+      header: '',
+      id: 'action',
+      enableSorting: false,
+      cell: i => (
+        <TransactionMenuComponent
+          data={i.row.original}
+          handlerEdit={(editData: TransactionState) => editTransaction(editData)}
+          handlerConfirm={(confirmData: TransactionState) => confirmTransaction(confirmData)}
+          handlerDelete={(deleteData: TransactionState) => deleteTransaction(deleteData)} />
+      ),
+    }),
+  ]
+
+  const table = useReactTable({
+    data, columns, state: { sorting, columnFilters },
+    onColumnFiltersChange: setColumnFilters, getFilteredRowModel: getFilteredRowModel(),
+    getFacetedRowModel: getFacetedRowModel(),
+    getFacetedUniqueValues: getFacetedUniqueValues(),
+    getFacetedMinMaxValues: getFacetedMinMaxValues(),
+    onSortingChange: setSorting, getSortedRowModel: getSortedRowModel(),
+    getCoreRowModel: getCoreRowModel(), getPaginationRowModel: getPaginationRowModel(),
+  })
+
+  if (table.getFilteredRowModel().rows.length > 0) {
+    totalData = table.getFilteredRowModel().rows.length;
+    table.getFilteredRowModel().rows.map(d => {
+      totalamount = totalamount + d.original.amount;
+      totalConfirmed = d.original.status == 'confirmed' ? totalConfirmed + 1 : totalConfirmed;
+      totalUnconfirmed = d.original.status == 'unconfirmed' ? totalUnconfirmed + 1 : totalUnconfirmed;
     })
   }
 
@@ -381,8 +508,6 @@ const TransactionPage = () => {
 }
 
 TransactionPage.getLayout = (page: ReactElement) => {
-
-
   return (
     <>
       <Head>

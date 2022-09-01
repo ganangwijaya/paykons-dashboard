@@ -3,9 +3,8 @@ import axios from "axios";
 import { useEffect, useRef, useState } from "react"
 import { MemberState, TransactionState } from "../../utils/interface";
 
-const ConfirmData = ({ data }: { data: TransactionState }) => {
+const ConfirmData = ({ data, handlerConfirm }: { data: TransactionState, handlerConfirm: (confirmData: TransactionState) => Promise<void> }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
-  const toast = useToast()
   const cancelRef = useRef() as React.MutableRefObject<HTMLButtonElement>;
 
   return (
@@ -23,7 +22,8 @@ const ConfirmData = ({ data }: { data: TransactionState }) => {
               Confirm Data
             </AlertDialogHeader>
             <AlertDialogBody>
-              Are you sure? You can't undo this action afterwards.
+              Are you sure want to confirm transaction data <chakra.strong>{data.name}</chakra.strong> with <chakra.strong> {Intl.DateTimeFormat('id-ID', { dateStyle: 'medium' }).format(new Date(data.transactionDate))}</chakra.strong>?
+              You can't undo this action afterwards.
             </AlertDialogBody>
             <AlertDialogFooter>
               <ButtonGroup size={'sm'}>
@@ -31,19 +31,7 @@ const ConfirmData = ({ data }: { data: TransactionState }) => {
                   Cancel
                 </Button>
                 <Button
-                  onClick={
-                    () => {
-                      onClose();
-                      toast({
-                        title: 'Transaction Data Confirmed',
-                        description: `Transaction Data with ID ${data._id} has successfully confirmed.`,
-                        status: 'success',
-                        duration: 3000,
-                        isClosable: true,
-                        position: 'top-right',
-                      });
-                    }
-                  }
+                  onClick={() => { handlerConfirm(data) }}
                   colorScheme={'green'} >
                   Confirm
                 </Button>
@@ -56,10 +44,8 @@ const ConfirmData = ({ data }: { data: TransactionState }) => {
   )
 }
 
-const DeleteData = ({ data }: { data: TransactionState }) => {
+const DeleteData = ({ data, handlerDelete }: { data: TransactionState, handlerDelete: (deleteData: TransactionState) => Promise<void> }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
-  const toast = useToast()
-
   const cancelRef = useRef() as React.MutableRefObject<HTMLButtonElement>;
 
   return (
@@ -77,29 +63,15 @@ const DeleteData = ({ data }: { data: TransactionState }) => {
               Delete Data
             </AlertDialogHeader>
             <AlertDialogBody>
-              Are you sure? You can't undo this action afterwards.
+              Are you sure want to delete transaction data <chakra.strong>{data.name}</chakra.strong> with <chakra.strong> {Intl.DateTimeFormat('id-ID', { dateStyle: 'medium' }).format(new Date(data.transactionDate))}</chakra.strong>?
+              You can't undo this action afterwards.
             </AlertDialogBody>
             <AlertDialogFooter>
               <ButtonGroup size={'sm'}>
                 <Button ref={cancelRef} onClick={onClose}>
                   Cancel
                 </Button>
-                <Button
-                  onClick={
-                    () => {
-                      onClose();
-                      toast({
-                        title: 'Transaction Data Deleted',
-                        description: `Transaction Data with ID ${data._id} has successfully deleted.`,
-                        status: 'error',
-                        duration: 3000,
-                        isClosable: true,
-                        position: 'top-right',
-                      });
-                    }
-                  }
-                  colorScheme={'red'}
-                >
+                <Button onClick={() => handlerDelete(data)} colorScheme={'red'}>
                   Delete
                 </Button>
               </ButtonGroup>
@@ -111,13 +83,16 @@ const DeleteData = ({ data }: { data: TransactionState }) => {
   )
 }
 
-const EditData = ({ data }: { data: TransactionState }) => {
+const EditData = ({ data, handlerEdit }: { data: TransactionState, handlerEdit: (editData: TransactionState) => Promise<void> }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
-  const toast = useToast()
-
-  const cancelRef = useRef() as React.MutableRefObject<HTMLButtonElement>;
 
   const [updatedData, setUpdatedData] = useState<TransactionState>(data);
+
+  const handleSubmit = () => {
+    handlerEdit(updatedData);
+    setUpdatedData(data);
+    onClose();
+  }
 
   const handleInputChange = (event: any) => {
     setUpdatedData(s => ({ ...s, [event.target.name]: event.target.value }))
@@ -126,33 +101,23 @@ const EditData = ({ data }: { data: TransactionState }) => {
   return (
     <>
       <MenuItem onClick={onOpen} icon={<i className="ri-edit-box-line"></i>}>Edit</MenuItem>
-      <AlertDialog
-        isOpen={isOpen}
-        leastDestructiveRef={cancelRef}
-        onClose={onClose}
-        isCentered
-      >
-        <AlertDialogOverlay>
-          <AlertDialogContent>
-            <AlertDialogHeader fontSize='lg' fontWeight='bold'>
-              Edit Data
-            </AlertDialogHeader>
-            <AlertDialogBody>
+      <Modal size={'xl'} onClose={onClose} isOpen={isOpen} scrollBehavior={'inside'} isCentered>
+        <ModalOverlay />
+        <chakra.form onSubmit={e => { e.preventDefault(); handleSubmit(); }}>
+          <ModalContent>
+            <ModalHeader>Edit Transaction</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
               <Stack>
-                <FormControl>
+                <FormControl isRequired>
                   <FormLabel fontSize={'sm'}>Name</FormLabel>
-                  <Input type={'text'} size={'sm'} value={updatedData.name} name={'name'} onChange={e => handleInputChange(e)} />
+                  <Input type={'text'} size={'sm'} value={updatedData.name} name={'name'} onChange={e => handleInputChange(e)} rounded={'md'} />
                 </FormControl>
-                <FormControl>
+                <FormControl isRequired>
                   <FormLabel fontSize={'sm'}>Amount</FormLabel>
                   <InputGroup size={'sm'}>
-                    <InputLeftElement
-                      pointerEvents='none'
-                      color='gray.400'
-                      fontSize={'sm'}
-                      children='Rp'
-                    />
-                    <Input type={'text'} name={'amount'}
+                    <InputLeftAddon rounded={'md'}>Rp</InputLeftAddon>
+                    <Input type={'text'} name={'amount'} rounded={'md'}
                       value={updatedData.amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
                       onChange={(e) => {
                         var ea = e.target.value.replace(/[^0-9\.-]+/g, '');
@@ -167,43 +132,25 @@ const EditData = ({ data }: { data: TransactionState }) => {
                     </InputRightElement>
                   </InputGroup>
                 </FormControl>
-                <FormControl mt={4} >
+                <FormControl mt={4} isRequired>
                   <FormLabel fontSize={'sm'}>Transaction Date</FormLabel>
-                  <Input type={'date'} size={'sm'} value={data.transactionDate} onChange={e => e.target.value} />
+                  <Input type={'date'} size={'sm'} value={data.transactionDate} onChange={e => e.target.value} rounded={'md'} />
                 </FormControl>
-                <FormControl isDisabled>
-                  <FormLabel fontSize={'sm'}>PIC</FormLabel>
-                  <Input type={'text'} size={'sm'} value={updatedData.pic} name={'name'} onChange={e => handleInputChange(e)} />
+                <FormControl isRequired>
+                  <FormLabel fontSize={'sm'}>Transaction Evidence</FormLabel>
+                  <Input type={'text'} size={'sm'} value={updatedData.evidence} name={'evidence'} onChange={e => handleInputChange(e)} rounded={'md'} />
                 </FormControl>
               </Stack>
-            </AlertDialogBody>
-            <AlertDialogFooter>
+            </ModalBody>
+            <ModalFooter>
               <ButtonGroup size={'sm'}>
-                <Button ref={cancelRef} onClick={onClose}>
-                  Cancel
-                </Button>
-                <Button
-                  onClick={
-                    () => {
-                      onClose();
-                      toast({
-                        title: 'Transaction Data Updated',
-                        description: `Transaction Data with ID ${data._id} has successfully updated.`,
-                        status: 'info',
-                        duration: 3000,
-                        isClosable: true,
-                        position: 'top-right',
-                      });
-                    }
-                  }
-                  colorScheme={'blue'}>
-                  Edit
-                </Button>
+                <Button onClick={onClose}>Close</Button>
+                <Button type={'submit'} colorScheme={'blue'}>Submit</Button>
               </ButtonGroup>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialogOverlay>
-      </AlertDialog>
+            </ModalFooter>
+          </ModalContent>
+        </chakra.form>
+      </Modal>
     </>
   )
 }
@@ -274,7 +221,7 @@ const ViewDetail = ({ data }: { data: TransactionState }) => {
 
   return (
     <>
-      <MenuItem onClick={onOpen} icon={<i className="ri-bill-line"></i>}>View Detail</MenuItem>
+      <MenuItem onClick={onOpen} icon={<i className="ri-fullscreen-line"></i>}>View Detail</MenuItem>
       <Modal size={'xl'} onClose={onClose} isOpen={isOpen} scrollBehavior={'inside'} isCentered>
         <ModalOverlay />
         <ModalContent>
@@ -361,7 +308,7 @@ export const AddDataModal = (props: { handlerSubmit: (data: TransactionState) =>
         <ModalOverlay />
         <chakra.form onSubmit={e => { e.preventDefault(); handleSubmit(); }}>
           <ModalContent>
-            <ModalHeader>Transaction Detail</ModalHeader>
+            <ModalHeader>Add Transaction</ModalHeader>
             <ModalCloseButton />
             <ModalBody>
               <Stack>
@@ -411,7 +358,13 @@ export const AddDataModal = (props: { handlerSubmit: (data: TransactionState) =>
   )
 }
 
-export const TransactionMenuComponent = ({ data }: { data: TransactionState }) => {
+export const TransactionMenuComponent = ({ data, handlerEdit, handlerConfirm, handlerDelete }:
+  {
+    data: TransactionState,
+    handlerEdit: (editData: TransactionState) => Promise<void>,
+    handlerConfirm: (confirmData: TransactionState) => Promise<void>,
+    handlerDelete: (deleteData: TransactionState) => Promise<void>
+  }) => {
   return (
     <>
       <Menu>
@@ -420,9 +373,13 @@ export const TransactionMenuComponent = ({ data }: { data: TransactionState }) =
           <ViewImage data={data} />
           <ViewDetail data={data} />
           <MenuDivider />
-          <ConfirmData data={data} />
-          <EditData data={data} />
-          <DeleteData data={data} />
+          {data.status == "unconfirmed" &&
+            <>
+              <ConfirmData data={data} handlerConfirm={(confirmData: TransactionState) => handlerConfirm(confirmData)} />
+              <EditData data={data} handlerEdit={(editData: TransactionState) => handlerEdit(editData)} />
+            </>
+          }
+          <DeleteData data={data} handlerDelete={(deleteData: TransactionState) => handlerDelete(deleteData)} />
         </MenuList>
       </Menu>
     </>

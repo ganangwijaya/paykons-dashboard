@@ -56,5 +56,7 @@ export const typeDefs = gql`
     changePassword(email: String!, oldPassword: String!, newPassword: String!): Message!
 
     addTransaction(name: String!, transactionDate: String!, amount: Int!, pic: String!, evidence: String!, status: String!): Message!
+    editTransaction(_id: String!, name: String, transactionDate: String, amount: Int, pic: String, evidence: String, status: String): Message!
+    deleteTransaction(_id: String!): Message!
   }
   `

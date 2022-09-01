@@ -2,8 +2,6 @@ import { ObjectId } from "mongodb";
 import { connectToDatabase } from "../../../lib/mongodb";
 const bcrypt = require('bcryptjs');
 
-const DateNow = new Date();
-
 export const resolvers = {
   Query: {
     member: async () => {
@@ -61,7 +59,7 @@ export const resolvers = {
           const hashedpass = bcrypt.hashSync(password, 10);
 
           await db.collection("user").insertOne({ email: email, password: hashedpass, _lastUpdate: _lastUpdate, _createdAt: _lastUpdate });
-          await db.collection("member").insertOne({ name: name, email: email, class: classData, phone: phone, bio: bio, role: role, _lastUpdate: _lastUpdate, _createdAt: _lastUpdate });
+          await db.collection("member").insertOne({ name: name, email: email, class: classData, phone: phone, bio: bio, role: role, _lastUpdate: new Date().toISOString(), _createdAt: new Date().toISOString() });
 
           return ({ success: true, message: 'Member submitted.' })
         } catch (error) {
@@ -78,7 +76,7 @@ export const resolvers = {
 
       if (member != null) {
         try {
-          db.collection("member").updateOne({ email: email }, { $set: { name: name, class: classData, phone: phone, bio: bio, _lastUpdate: DateNow.toISOString() } })
+          db.collection("member").updateOne({ email: email }, { $set: { name: name, class: classData, phone: phone, bio: bio, _lastUpdate: new Date().toISOString() } })
           return ({ success: true, message: 'Profile has been successfully updated.' })
         } catch (error) {
           return ({ success: false, message: error })
@@ -107,13 +105,55 @@ export const resolvers = {
         return ({ success: false, message: 'User not found.' })
       }
     },
+
     addTransaction: async (_: any, { name, transactionDate, amount, pic, evidence, status }: { name: string, transactionDate: string, amount: number, pic: string, evidence: string, status: string }) => {
       let { db } = await connectToDatabase();
       try {
-        await db.collection("transaction").insertOne({ name, transactionDate, amount, pic, evidence, status, _lastUpdate: DateNow.toISOString(), _createdAt: DateNow.toISOString() });
+        await db.collection("transaction").insertOne({ name, transactionDate, amount, pic, evidence, status, confirmedBy: "", _lastUpdate: new Date().toISOString(), _createdAt: new Date().toISOString() });
         return ({ success: true, message: 'Transaction data submitted.' })
       } catch (error) {
         return ({ success: false, message: error })
+      }
+    },
+    editTransaction: async (_: any, { _id, name, transactionDate, amount, pic, evidence, status }: { _id: string, name: string, transactionDate: string, amount: number, pic: string, evidence: string, status: string }) => {
+      let { db } = await connectToDatabase();
+
+      const transaction = await db.collection("transaction").findOne({ _id: new ObjectId(_id) });
+
+      if (transaction !== null) {
+
+        try {
+          // ypdate status only
+          if (name == undefined || name == "") {
+            db.collection("transaction").updateOne({ _id: new ObjectId(_id) }, { $set: { status: "confirmed", confirmedBy: pic, _lastUpdate: new Date().toISOString() } })
+            return ({ success: true, message: 'Transaction data status updated.' })
+          }
+          // update all data
+          else {
+            db.collection("transaction").updateOne({ _id: new ObjectId(_id) }, { $set: { name, transactionDate, amount, evidence, _lastUpdate: new Date().toISOString() } })
+            return ({ success: true, message: 'Transaction data updated.' })
+          }
+        } catch (error) {
+          return ({ success: false, message: error })
+        }
+
+      } else {
+        return ({ success: false, message: 'Transaction data not found.' })
+      }
+    },
+    deleteTransaction: async (_: any, { _id }: { _id: string }) => {
+      let { db } = await connectToDatabase();
+      const transaction = await db.collection("transaction").findOne({ _id: new ObjectId(_id) });
+
+      if (transaction !== null) {
+        try {
+          await db.collection("transaction").deleteOne({ _id: new ObjectId(_id) })
+          return ({ success: true, message: 'Transaction data deleted.' })
+        } catch (error) {
+          return ({ success: error, message: error })
+        }
+      } else {
+        return ({ success: false, message: 'Transaction data not found.' })
       }
     }
   }
