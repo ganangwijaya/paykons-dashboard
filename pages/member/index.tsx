@@ -126,7 +126,7 @@ const MemberPage = () => {
           <Flex justifyContent={'space-between'}>
             <Box>
               <Heading as={'h4'} size={'md'}>Member Data</Heading>
-              {/* <Text fontSize={'xs'}>Monthly cashflow overview.</Text> */}
+              <Text fontSize={'xs'} mt={2}>Member data list.</Text>
             </Box>
             <Box>
               {/* <Menu closeOnSelect={false}>

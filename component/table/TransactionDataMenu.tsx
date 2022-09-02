@@ -314,7 +314,7 @@ export const AddDataModal = (props: { handlerSubmit: (data: TransactionState) =>
               <Stack>
                 <FormControl isRequired>
                   <FormLabel fontSize={'sm'}>Transaction Name</FormLabel>
-                  <Input type={'text'} size={'sm'} value={transactionData.name} name={'name'} onChange={e => handleInputChange(e)} rounded={'md'} />
+                  <Input type={'text'} size={'sm'} value={transactionData.name} placeholder={'Enter transaction name'} name={'name'} onChange={e => handleInputChange(e)} rounded={'md'} />
                 </FormControl>
                 <FormControl isRequired>
                   <FormLabel fontSize={'sm'}>Amount</FormLabel>
@@ -341,7 +341,7 @@ export const AddDataModal = (props: { handlerSubmit: (data: TransactionState) =>
                 </FormControl>
                 <FormControl isRequired>
                   <FormLabel fontSize={'sm'}>Transaction Evidence</FormLabel>
-                  <Input type={'text'} size={'sm'} value={transactionData.evidence} name={'evidence'} onChange={e => handleInputChange(e)} rounded={'md'} />
+                  <Input type={'text'} size={'sm'} value={transactionData.evidence} placeholder={'Enter transaction evidence'}  name={'evidence'} onChange={e => handleInputChange(e)} rounded={'md'} />
                 </FormControl>
               </Stack>
             </ModalBody>

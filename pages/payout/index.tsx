@@ -205,7 +205,7 @@ const PayoutPage = () => {
           <Flex justifyContent={'space-between'}>
             <Box>
               <Heading as={'h4'} size={'md'}>Payout Data</Heading>
-              <Text mt={2} fontSize={'xs'}>Payout data list per member.</Text>
+              <Text mt={2} fontSize={'xs'}>Payout data list by member.</Text>
               <Flex gap={2} mt={4}>
                 {columnFilters.length > 0 && columnFilters.map((i, x) => (
                   <Tag key={x} size={'sm'}>

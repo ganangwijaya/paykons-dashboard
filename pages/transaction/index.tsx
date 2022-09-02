@@ -348,7 +348,7 @@ const TransactionPage = () => {
           <Flex justifyContent={'space-between'}>
             <Box>
               <Heading as={'h4'} size={'md'}>Transaction Data</Heading>
-              <Text fontSize={'xs'}>List all of transaction data.</Text>
+              <Text fontSize={'xs'} mt={2}>List all of transaction data.</Text>
             </Box>
             <Box>
               <ButtonGroup>
