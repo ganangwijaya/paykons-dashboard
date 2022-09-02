@@ -1,4 +1,4 @@
-import { ReactElement, useEffect } from "react"
+import { ReactElement, useEffect, useState } from "react"
 
 import Head from 'next/head'
 import dynamic from 'next/dynamic'
@@ -9,7 +9,8 @@ import { Box, Flex, Grid, GridItem, Heading, IconButton, Menu, MenuButton, MenuI
 import { useColorModeValue } from '@chakra-ui/react'
 
 import DashboardLayout from "../component/layout/DashboardLayout"
-import { CashFlowChartData, MemberChartData } from "../data/ChartData"
+import { BalancesData } from "../data/BalancesData"
+import { BalancesCharts, MemberChartData } from "../data/ChartData"
 
 
 const ChartCashFlow = dynamic(
@@ -46,6 +47,9 @@ const DashboardPage = () => {
   const iconColor = useColorModeValue('gray.100', 'gray.100');
   const increaseColor = useColorModeValue('green.500', 'green.400');
   const decreaseColor = useColorModeValue('red.500', 'red.400');
+
+  const [BalancesArray] = BalancesData();
+  const [CashFlowChartData, BalancesChartData] = BalancesCharts(BalancesArray)
 
   return (
     <Stack mt={4} gap={2}>
@@ -127,7 +131,9 @@ const DashboardPage = () => {
             </Menu>
           </Flex>
           <Box mt={2} overflow={'hidden'}>
-            <ChartCashFlow chartOption={CashFlowChartData} width={'100%'} height={'330px'} />
+            {BalancesArray.length > 0 &&
+              <ChartCashFlow chartOption={CashFlowChartData} width={'100%'} height={'330px'} />
+            }
           </Box>
         </GridItem>
         <GridItem colSpan={{ base: 3, md: 3, lg: 1 }} bg={bg} p={6} rounded={'xl'}>

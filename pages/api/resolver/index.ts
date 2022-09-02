@@ -46,6 +46,89 @@ export const resolvers = {
       let { db } = await connectToDatabase();
       const transaction = await db.collection("transaction").find().toArray();
       return [...transaction]
+    },
+    payouts: async () => {
+      let { db } = await connectToDatabase();
+      const payout = await db.collection("payout").aggregate([
+        {
+          $lookup: {
+            from: "member",
+            localField: "pic",
+            foreignField: "email",
+            as: "member"
+          }
+        },
+        {
+          $addFields: {
+            member: {
+              $cond: {
+                'if': {
+                  $gte: [{
+                    $size: '$member'
+                  },
+                    1
+                  ]
+                },
+                then: '$member',
+                'else': {
+                  name: '$pic'
+                }
+              }
+            }
+          }
+        },
+        {
+          $unwind: {
+            path: "$member"
+          }
+        }
+      ]).toArray()
+
+      return [...payout]
+    },
+    getPayouts: async (_: any, { _id, pic }: { _id: String, pic: String }) => {
+      let { db } = await connectToDatabase();
+      const payout = await db.collection("payout").aggregate([
+        {
+          $match: {
+            pic: `${pic}`
+          }
+        },
+        {
+          $lookup: {
+            from: "member",
+            localField: "pic",
+            foreignField: "email",
+            as: "member"
+          }
+        },
+        {
+          $addFields: {
+            member: {
+              $cond: {
+                'if': {
+                  $gte: [{
+                    $size: '$member'
+                  },
+                    1
+                  ]
+                },
+                then: '$member',
+                'else': {
+                  name: '$pic'
+                }
+              }
+            }
+          }
+        },
+        {
+          $unwind: {
+            path: "$member"
+          }
+        }
+      ]).toArray()
+
+      return [...payout]
     }
   },
   Mutation: {
@@ -154,6 +237,57 @@ export const resolvers = {
         }
       } else {
         return ({ success: false, message: 'Transaction data not found.' })
+      }
+    },
+
+    addPayout: async (_: any, { pic, payoutDate, amount, evidence, status }: { pic: string, payoutDate: string, amount: number, evidence: string, status: string }) => {
+      let { db } = await connectToDatabase();
+      try {
+        await db.collection("payout").insertOne({ pic, payoutDate, amount, evidence, status, confirmedBy: "", _lastUpdate: new Date().toISOString(), _createdAt: new Date().toISOString() });
+        return ({ success: true, message: 'Payout data submitted.' })
+      } catch (error) {
+        return ({ success: false, message: error })
+      }
+    },
+    editPayout: async (_: any, { _id, pic, payoutDate, amount, evidence, status }: { _id: string, pic: string, payoutDate: string, amount: number, evidence: string, status: string }) => {
+      let { db } = await connectToDatabase();
+
+      const payout = await db.collection("payout").findOne({ _id: new ObjectId(_id) });
+
+      if (payout !== null) {
+
+        try {
+          // ypdate status only
+          if (amount == undefined || amount == 0) {
+            db.collection("payout").updateOne({ _id: new ObjectId(_id) }, { $set: { status: "confirmed", confirmedBy: pic, _lastUpdate: new Date().toISOString() } })
+            return ({ success: true, message: 'Payout data status updated.' })
+          }
+          // update all data
+          else {
+            db.collection("payout").updateOne({ _id: new ObjectId(_id) }, { $set: { pic, payoutDate, amount, evidence, _lastUpdate: new Date().toISOString() } })
+            return ({ success: true, message: 'Payout data updated.' })
+          }
+        } catch (error) {
+          return ({ success: false, message: error })
+        }
+
+      } else {
+        return ({ success: false, message: 'Payout data not found.' })
+      }
+    },
+    deletePayout: async (_: any, { _id }: { _id: string }) => {
+      let { db } = await connectToDatabase();
+      const payout = await db.collection("payout").findOne({ _id: new ObjectId(_id) });
+
+      if (payout !== null) {
+        try {
+          await db.collection("payout").deleteOne({ _id: new ObjectId(_id) })
+          return ({ success: true, message: 'Payout data deleted.' })
+        } catch (error) {
+          return ({ success: error, message: error })
+        }
+      } else {
+        return ({ success: false, message: 'Payout data not found.' })
       }
     }
   }

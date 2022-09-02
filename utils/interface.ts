@@ -31,17 +31,20 @@ export interface MemberState {
   role: number,
   _id: string,
   _lastUpdate: string,
+  _createdAt: string,
 }
 
 export interface PayoutState {
-  id: number,
-  memberID: number,
+  _id: string,
+  pic: string,
   payoutDate: string,
   amount: number,
   status: 'confirmed' | 'unconfirmed',
   confirmedBy: undefined | number,
-  payoutEvidence: string,
-  lastUpdate: string,
+  evidence: string,
+  member: MemberState,
+  _lastUpdate: string,
+  _createdAt: string,
 }
 
 export interface PermissionState {

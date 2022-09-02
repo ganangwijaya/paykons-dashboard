@@ -1,9 +1,12 @@
 import { ReactElement, useEffect, useMemo, useState } from "react"
 
 import Head from 'next/head'
+import Link from "next/link"
+import axios from "axios"
 import { useRouter } from "next/router"
+import { useSession } from "next-auth/react"
 
-import { Avatar, Badge, Box, Button, ButtonGroup, Flex, Grid, GridItem, Heading, IconButton, Menu, MenuButton, MenuDivider, MenuItemOption, MenuList, MenuOptionGroup, Popover, PopoverArrow, PopoverBody, PopoverCloseButton, PopoverContent, PopoverFooter, PopoverHeader, PopoverTrigger, Select, Stack, TableContainer, Tag, TagCloseButton, TagLabel, Text } from '@chakra-ui/react'
+import { Avatar, Badge, Box, Button, ButtonGroup, Flex, Grid, GridItem, Heading, IconButton, Menu, MenuButton, MenuDivider, MenuItemOption, MenuList, MenuOptionGroup, Popover, PopoverArrow, PopoverBody, PopoverCloseButton, PopoverContent, PopoverFooter, PopoverHeader, PopoverTrigger, Select, Stack, TableContainer, Tag, TagCloseButton, TagLabel, Text, useToast } from '@chakra-ui/react'
 import { Table, Thead, Tbody, Tr, Th, Td, chakra } from '@chakra-ui/react'
 import { useColorModeValue } from '@chakra-ui/react'
 import { useReactTable, createColumnHelper, getCoreRowModel, flexRender, getSortedRowModel, SortingState, getFilteredRowModel, getFacetedRowModel, getFacetedUniqueValues, getFacetedMinMaxValues, ColumnFiltersState, getPaginationRowModel } from "@tanstack/react-table"
@@ -12,12 +15,13 @@ import DashboardLayout from "../../component/layout/DashboardLayout"
 import { DebouncedInput, Filter } from "../../component/table/FormFilter"
 
 import { MemberState, PayoutState } from "../../utils/interface"
-import { PayoutData } from "../../data/PayoutData"
 import { MemberData } from "../../data/MemberData"
 import { PayoutMenuComponent } from "../../component/table/PayoutDataMenu"
-import Link from "next/link"
+
+import { ConfirmPayout, DeletePayout, EditPayout } from "../../utils/handler"
 
 const MemberPayoutPage = () => {
+  const { data: session } = useSession();
   const router = useRouter()
   const { memberid } = router.query
 
@@ -26,90 +30,52 @@ const MemberPayoutPage = () => {
   const iconColor = useColorModeValue('gray.100', 'gray.100');
   const increaseColor = useColorModeValue('green.500', 'green.400');
   const decreaseColor = useColorModeValue('red.500', 'red.400');
+  const toast = useToast()
 
-  const [member, setMember] = useState<MemberState>({ ...MemberData.filter(f => f.id == Number(memberid))[0] })
+  const initialMemberData = {
+    id: 0,
+    name: '',
+    email: '',
+    class: 0,
+    phone: '',
+    bio: '',
+    role: 0,
+    _id: '',
+    _lastUpdate: '',
+    _createdAt: '',
+  }
+
+  const [payout, setPayout] = useState<PayoutState[]>([])
+  const [member, setMember] = useState<MemberState>(initialMemberData)
+
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [filteredDate, setFilteredDate] = useState<string | 'day' | 'month' | 'year'>('month');
   const columnHelper = createColumnHelper<PayoutState>();
+  const [reRender, setReRender] = useState(false)
+
+  var totalamount: number = 0;
+  var totalData: number = 0;
+  var totalConfirmed: number = 0;
+  var totalUnconfirmed: number = 0;
 
   const data: PayoutState[] = useMemo(
-    () => [...PayoutData.filter(f => f.id === Number(memberid))], [memberid],
+    () => [...payout], [payout],
   )
 
   const columns = [
-    columnHelper.accessor('id', {
-      enableColumnFilter: false,
-      enableSorting: true,
-      cell: i => i.getValue()
-    }),
-    columnHelper.accessor('memberID', {
-      header: 'Member',
-      enableColumnFilter: false,
-      enableSorting: false,
-      filterFn: 'equals',
-      cell: i => {
-        const member = MemberData.filter(f => f.id === i.getValue())[0];
-
-        return (
-          <Popover placement={'bottom-start'}>
-            <PopoverTrigger>
-              <Button size={'xs'} variant={'unstyled'}>{member.name}</Button>
-            </PopoverTrigger>
-            <PopoverContent>
-              <PopoverArrow />
-              <PopoverCloseButton />
-              <PopoverHeader textTransform={'capitalize'}>
-                <>{member.name}<Tag ml={1} size={'sm'} colorScheme={'blue'}>{member.class}</Tag></>
-              </PopoverHeader>
-              <PopoverBody overflow={'hidden'} whiteSpace={'break-spaces'}>
-                <Text>Check all payout data with name: {member.name}</Text>
-              </PopoverBody>
-              <PopoverFooter display={'flex'} justifyContent={'flex-end'}>
-                <Button onClick={() => setColumnFilters([{ id: 'memberID', value: member.id }])} size={'xs'} variant={'solid'} colorScheme={'blue'}>Check Data</Button>
-              </PopoverFooter>
-            </PopoverContent>
-          </Popover>
-        )
-      }
-    }),
-    columnHelper.accessor('amount', {
-      cell: i => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, notation: 'compact' }).format(i.getValue())
-    }),
     columnHelper.accessor('payoutDate', {
       header: 'Date',
       cell: i => new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(i.getValue()))
+    }),
+    columnHelper.accessor('amount', {
+      cell: i => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, notation: 'compact' }).format(i.getValue())
     }),
     columnHelper.accessor('status', {
       header: 'Status',
       filterFn: 'equalsString',
       cell: i => (
-        <>
-          <Popover placement={'bottom-end'}>
-            <PopoverTrigger>
-              <Badge cursor={'pointer'} colorScheme={i.getValue() == 'confirmed' ? 'green' : 'red'} fontSize={10}>{i.getValue()}</Badge>
-            </PopoverTrigger>
-            <PopoverContent>
-              <PopoverArrow />
-              <PopoverCloseButton />
-              <PopoverHeader textTransform={'capitalize'}>
-                <Badge cursor={'pointer'} colorScheme={i.getValue() == 'confirmed' ? 'green' : 'red'} fontSize={10}>{i.getValue()}</Badge>
-              </PopoverHeader>
-              <PopoverBody overflow={'hidden'} whiteSpace={'break-spaces'}>
-                <Text>
-                  {i.getValue() == 'confirmed' ?
-                    <chakra.span>
-                      Confirmed by <chakra.strong>{MemberData.filter(f => f.id === i.row.original.confirmedBy)[0].name}</chakra.strong> <chakra.br />
-                      on <chakra.strong>{new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'long' }).format(new Date(i.row.original.lastUpdate))}</chakra.strong>
-                    </chakra.span>
-                    :
-                    'This payout data is unconfirmed, please check payout evidence and confirm it in next action button.'
-                  }
-                </Text>
-              </PopoverBody>
-            </PopoverContent>
-          </Popover>
-        </>
+        <Badge colorScheme={i.getValue() == 'confirmed' ? 'green' : 'red'} fontSize={10}>{i.getValue()}</Badge>
       )
     }),
     columnHelper.display({
@@ -117,7 +83,11 @@ const MemberPayoutPage = () => {
       id: 'action',
       enableSorting: false,
       cell: i => (
-        <PayoutMenuComponent data={i.row.original} />
+        <PayoutMenuComponent
+          data={i.row.original}
+          handlerEdit={(editData: PayoutState) => editPayout(editData)}
+          handlerConfirm={(confirmData: PayoutState) => confirmPayout(confirmData)}
+          handlerDelete={(deleteData: PayoutState) => deletePayout(deleteData)} />
       ),
     }),
   ]
@@ -132,10 +102,7 @@ const MemberPayoutPage = () => {
     getCoreRowModel: getCoreRowModel(), getPaginationRowModel: getPaginationRowModel(),
   })
 
-  var totalamount: number = 0;
-  var totalData: number = 0;
-  var totalConfirmed: number = 0;
-  var totalUnconfirmed: number = 0;
+
   if (table.getFilteredRowModel().rows.length > 0) {
     totalData = table.getFilteredRowModel().rows.length;
     table.getFilteredRowModel().rows.map(d => {
@@ -154,7 +121,7 @@ const MemberPayoutPage = () => {
   }, [memberid])
 
   const d = new Date();
-  const payoutThisMonth = data.filter(f => f.payoutDate.includes(d.getFullYear() + '-' + d.getMonth()));
+  const payoutThisMonth = data.filter(f => f.payoutDate.includes(d.getFullYear() + '-' + Intl.DateTimeFormat('id-ID', { month: '2-digit' }).format(d)));
   var totalPayoutThisMonth: number = 0;
 
   if (payoutThisMonth.length > 0) {
@@ -162,9 +129,198 @@ const MemberPayoutPage = () => {
       totalPayoutThisMonth = totalPayoutThisMonth + p.amount;
     })
   }
-  else {
-    console.log('ewa');
+
+  const submitTransaction = async (data: PayoutState) => {
+    const querySubmit = `mutation Mutation {
+      addPayout(
+        pic: "${data.pic}"
+        payoutDate: "${data.payoutDate}"
+        amount: ${data.amount}
+        evidence: "${data.evidence}"
+        status: "unconfirmed"
+      ) {
+        success
+        message
+      }
+    }`
+
+    await axios.post('/api/graphql', { query: querySubmit }).then(res => {
+      const payout = res.data.data.addPayout;
+      if (payout.success == true) {
+        toast({
+          title: 'Transaction Data Submitted',
+          description: `${payout.message}`,
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+          position: 'top-right',
+        });
+        setReRender(r => !r);
+      } else {
+        toast({
+          title: 'Error',
+          description: `${payout.message}`,
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+          position: 'top-right',
+        });
+      }
+    })
   }
+
+  const editPayout = async (data: PayoutState) => {
+    await EditPayout(data).then(
+      res => {
+        if (res.success == true) {
+          toast({
+            title: 'Payout Data Updated',
+            description: `${res.message}`,
+            status: 'success',
+            duration: 3000,
+            isClosable: true,
+            position: 'top-right',
+          });
+          setReRender(r => !r);
+        } else {
+          toast({
+            title: 'Error',
+            description: `${res.message}`,
+            status: 'error',
+            duration: 3000,
+            isClosable: true,
+            position: 'top-right',
+          });
+        }
+      }
+    )
+  }
+
+  const confirmPayout = async (data: PayoutState) => {
+    const newdata = { ...data, pic: String(session?.user?.email), amount: 0 };
+
+    await ConfirmPayout(newdata).then(
+      res => {
+        if (res.success == true) {
+          toast({
+            title: 'Payout Status Updated',
+            description: `${res.message}`,
+            status: 'success',
+            duration: 3000,
+            isClosable: true,
+            position: 'top-right',
+          });
+          setReRender(r => !r);
+        } else {
+          toast({
+            title: 'Error',
+            description: `${res.message}`,
+            status: 'error',
+            duration: 3000,
+            isClosable: true,
+            position: 'top-right',
+          });
+        }
+      }
+    )
+  }
+
+  const deletePayout = async (data: PayoutState) => {
+    await DeletePayout(data).then(
+      res => {
+        if (res.success == true) {
+          toast({
+            title: 'Payout Data Deleted',
+            description: `${res.message}`,
+            status: 'success',
+            duration: 3000,
+            isClosable: true,
+            position: 'top-right',
+          });
+          setReRender(r => !r);
+        } else {
+          toast({
+            title: 'Error',
+            description: `${res.message}`,
+            status: 'error',
+            duration: 3000,
+            isClosable: true,
+            position: 'top-right',
+          });
+        }
+      }
+    )
+  }
+
+  useEffect(() => {
+    var mounted: boolean = true;
+    const query = `query {
+      getMember(_id: "${memberid}", email: "") {
+        _id
+        name
+        email
+        class
+        phone
+        bio
+        role
+        _lastUpdate
+      }
+    }`
+
+    const getMember = async () => {
+      await axios.post(`/api/graphql`, { query }).then(res => {
+        const member = res.data.data.getMember;
+        if (mounted) {
+          setMember(member);
+        }
+      })
+    }
+
+    if (memberid !== undefined) {
+      getMember();
+    }
+
+    return () => { }
+  }, [memberid])
+
+  useEffect(() => {
+    var mounted: boolean = true;
+
+    const query = `query Payouts {
+      getPayouts(pic: "${member.email}") {
+        _id
+        pic
+        payoutDate
+        amount
+        status
+        evidence
+        confirmedBy
+        _lastUpdate
+        _createdAt
+        member {
+          _id
+          name
+          email
+          class
+        }
+      }
+    }`
+
+    const getPayout = async () => {
+      await axios.post('/api/graphql', { query }).then(res => {
+        const payouts = res.data.data.getPayouts;
+        if (mounted) {
+          setPayout([...payouts]);
+        }
+      })
+    }
+
+    if (member.email !== "" || member.email !== null) {
+      getPayout();
+    }
+
+    return () => { mounted = false; }
+  }, [reRender, member])
 
   return (
     <Stack mt={4} gap={2}>

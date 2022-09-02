@@ -40,10 +40,7 @@ const TransactionPage = () => {
   const { data: session } = useSession();
 
   const bg = useColorModeValue('gray.50', 'gray.800');
-  const iconBG = useColorModeValue('blue.500', 'blue.400');
   const iconColor = useColorModeValue('gray.100', 'gray.100');
-  const increaseColor = useColorModeValue('green.500', 'green.400');
-  const decreaseColor = useColorModeValue('red.500', 'red.400');
   const toast = useToast()
 
   const [transaction, setTransaction] = useState<TransactionState[]>([])
@@ -102,18 +99,6 @@ const TransactionPage = () => {
   }
 
   const editTransaction = async (data: TransactionState) => {
-    const queryConfirm = `mutation Mutation {
-      editTransaction(
-        _id: "${data._id}"
-        name: null
-        status: "confirmed"
-        pic: "${data.pic}"
-      ) {
-        success
-        message
-      }
-    }`
-
     const queryEdit = `mutation Mutation {
       editTransaction(
         _id: "${data._id}"

@@ -29,6 +29,7 @@ const MemberDetailPage = () => {
     role: 0,
     _id: '',
     _lastUpdate: '',
+    _createdAt: '',
   }
   const [member, setMember] = useState<MemberState>(initialMemberData)
   const [role, setRole] = useState<RoleState>()

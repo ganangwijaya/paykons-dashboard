@@ -43,11 +43,28 @@ export const typeDefs = gql`
     _createdAt: String
   }
 
+  type Payout {
+    _id: String
+    pic: String
+    payoutDate: String
+    amount: Int
+    status: String
+    evidence: String
+    confirmedBy: String
+    member: Member
+    _lastUpdate: String
+    _createdAt: String
+  }
+
   type Query {
     member: [Member]!
     getMember(_id: String!, email: String!): Member
     getAuth(email: String!, password: String!): AuthPayload!
+    
     transactions: [Transaction]!
+    
+    payouts: [Payout]!
+    getPayouts(_id: String, pic: String): [Payout]!
   }
 
   type Mutation {
@@ -58,5 +75,9 @@ export const typeDefs = gql`
     addTransaction(name: String!, transactionDate: String!, amount: Int!, pic: String!, evidence: String!, status: String!): Message!
     editTransaction(_id: String!, name: String, transactionDate: String, amount: Int, pic: String, evidence: String, status: String): Message!
     deleteTransaction(_id: String!): Message!
+
+    addPayout(pic: String!, payoutDate: String!, amount: Int!, evidence: String!, status: String!): Message!
+    editPayout(_id: String!, pic: String, payoutDate: String, amount: Int, evidence: String, status: String): Message!
+    deletePayout(_id: String!): Message!
   }
   `

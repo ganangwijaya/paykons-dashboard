@@ -1,143 +1,147 @@
 import { ApexOptions } from "apexcharts"
 import theme from "../styles/theme";
-import { BalancesData } from "./BalancesData";
+import { BalanceState } from "../utils/interface";
 
-export const CashFlowChartData: ApexOptions = {
-  series: [
-    {
-      name: "Income",
-      data: [...BalancesData.map((d) => d.income)]
+export const BalancesCharts = (data: BalanceState[]) => {
+  const CashFlowChartData: ApexOptions = {
+    series: [
+      {
+        name: "Income",
+        data: [...data.map((d) => d.income)]
+      },
+      {
+        name: "Outcome",
+        data: [...data.map((d) => d.outcome)]
+      }
+    ],
+    chart: {
+      id: "cashflow",
+      type: 'area',
+      toolbar: {
+        show: false
+      },
+      zoom: {
+        enabled: false,
+      },
+      fontFamily: 'Inter, sans-serif',
     },
-    {
-      name: "Outcome",
-      data: [...BalancesData.map((d) => d.outcome)]
-    }
-  ],
-  chart: {
-    id: "cashflow",
-    type: 'area',
-    toolbar: {
-      show: false
+    legend: {
+      position: 'top',
+      horizontalAlign: 'right',
+      labels: {
+        useSeriesColors: true,
+      },
+      itemMargin: {
+        horizontal: 10,
+      },
+      markers: {
+        width: 8,
+        height: 8,
+        radius: 8,
+        offsetX: -4,
+        offsetY: 0
+      },
     },
-    zoom: {
-      enabled: false,
-    },
-    fontFamily: 'Inter, sans-serif',
-  },
-  legend: {
-    position: 'top',
-    horizontalAlign: 'right',
-    labels: {
-      useSeriesColors: true,
-    },
-    itemMargin: {
-      horizontal: 10,
-    },
-    markers: {
-      width: 8,
-      height: 8,
-      radius: 8,
-      offsetX: -4,
-      offsetY: 0
-    },
-  },
-  colors: [theme.colors.chartBlue, theme.colors.chartRed],
-  fill: {
     colors: [theme.colors.chartBlue, theme.colors.chartRed],
-    type: 'gradient',
-    gradient: {
-      shade: 'dark',
-      type: 'vertical',
-      stops: [0, 100]
-    }
-  },
-  stroke: {
-    curve: "smooth"
-  },
-  dataLabels: {
-    enabled: false
-  },
-  grid: {
-    strokeDashArray: 6,
-    borderColor: ''
-  },
-  xaxis: {
-    type: "datetime",
-    categories: [...BalancesData.map(d => d.month)],
-    labels: {
-      format: 'MMM',
-      style: {
-        colors: '',
-      },
-    },
-  },
-  yaxis: {
-    labels: {
-      style: {
-        colors: '#FFF',
-      },
-      formatter: function (value) {
-        return (new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, notation: 'compact' }).format(value))
+    fill: {
+      colors: [theme.colors.chartBlue, theme.colors.chartRed],
+      type: 'gradient',
+      gradient: {
+        shade: 'dark',
+        type: 'vertical',
+        stops: [0, 100]
       }
-    }
-  },
-  tooltip: {
-    theme: 'dark',
-    x: {
-      format: 'MMM y'
     },
-  },
-}
+    stroke: {
+      curve: "smooth"
+    },
+    dataLabels: {
+      enabled: false
+    },
+    grid: {
+      strokeDashArray: 6,
+      borderColor: ''
+    },
+    xaxis: {
+      type: "datetime",
+      categories: [...data.map(d => d.month)],
+      labels: {
+        format: 'MMM',
+        style: {
+          colors: '',
+        },
+      },
+    },
+    yaxis: {
+      labels: {
+        style: {
+          colors: '#FFF',
+        },
+        formatter: function (value) {
+          return (new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, notation: 'compact' }).format(value))
+        }
+      }
+    },
+    tooltip: {
+      theme: 'dark',
+      x: {
+        format: 'MMM y'
+      },
+    },
+  }
 
-export const BalancesChartData: ApexOptions = {
-  series: [{
-    name: 'Balances',
-    data: [...BalancesData.map(d => d.balance)]
-  }],
-  chart: {
-    id: 'balancesData',
-    type: 'bar',
-    toolbar: {
-      show: false
+  const BalancesChartData: ApexOptions = {
+    series: [{
+      name: 'Balances',
+      data: [...data.map(d => d.balance)]
+    }],
+    chart: {
+      id: 'balancesData',
+      type: 'bar',
+      toolbar: {
+        show: false
+      },
+      zoom: {
+        enabled: false,
+      },
+      fontFamily: 'Inter, sans-serif',
     },
-    zoom: {
-      enabled: false,
+    dataLabels: {
+      enabled: false
     },
-    fontFamily: 'Inter, sans-serif',
-  },
-  dataLabels: {
-    enabled: false
-  },
-  grid: {
-    strokeDashArray: 6,
-  },
-  colors: [theme.colors.chartBlue],
-  xaxis: {
-    type: "datetime",
-    categories: [...BalancesData.map(d => d.month)],
-    labels: {
-      format: 'MMM',
-      style: {
-        colors: '#FFF',
+    grid: {
+      strokeDashArray: 6,
+    },
+    colors: [theme.colors.chartBlue],
+    xaxis: {
+      type: "datetime",
+      categories: [...data.map(d => d.month)],
+      labels: {
+        format: 'MMM',
+        style: {
+          colors: '#FFF',
+        },
       },
     },
-  },
-  yaxis: {
-    labels: {
-      style: {
-        colors: '#FFF',
-      },
-      formatter: function (value) {
-        return (new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, notation: 'compact' }).format(value))
+    yaxis: {
+      labels: {
+        style: {
+          colors: '#FFF',
+        },
+        formatter: function (value) {
+          return (new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, notation: 'compact' }).format(value))
+        }
       }
-    }
-  },
-  tooltip: {
-    theme: 'dark',
-    x: {
-      format: 'MMM y'
     },
-  },
+    tooltip: {
+      theme: 'dark',
+      x: {
+        format: 'MMM y'
+      },
+    },
+  }
+
+  return [CashFlowChartData, BalancesChartData]
 }
 
 export const MemberChartData: ApexOptions = {

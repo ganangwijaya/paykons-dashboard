@@ -14,7 +14,8 @@ import { BalancesData } from "../../data/BalancesData"
 import { TransactionMenuComponent } from "../../component/table/TransactionDataMenu"
 import { DebouncedInput, Filter } from "../../component/table/FormFilter"
 import { CondensedCard } from "../../component/Card"
-import { BalancesChartData, CashFlowChartData } from "../../data/ChartData"
+
+import { BalancesCharts, MemberChartData } from "../../data/ChartData"
 
 const ChartCashFlow = dynamic(
   () => import('../../component/Chart'),
@@ -33,8 +34,10 @@ const BalancesPage = () => {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [filteredDate, setFilteredDate] = useState<string | 'day' | 'month' | 'year'>('month');
   const columnHelper = createColumnHelper<BalanceState>();
+  const [BalancesArray] = BalancesData();
+  const [CashFlowChartData, BalancesChartData] = BalancesCharts(BalancesArray)
 
-  const data: BalanceState[] = useMemo(() => [...BalancesData], [])
+  const data: BalanceState[] = useMemo(() => [...BalancesArray], [BalancesArray])
 
   const columns = [
     columnHelper.accessor('id', {
@@ -120,7 +123,9 @@ const BalancesPage = () => {
             </Menu>
           </Flex>
           <Box mt={2} overflow={'hidden'}>
-            <ChartCashFlow chartOption={CashFlowChartData} width={'100%'} height={'330px'} />
+            {BalancesArray.length > 0 &&
+              <ChartCashFlow chartOption={CashFlowChartData} width={'100%'} height={'330px'} />
+            }
           </Box>
         </GridItem>
         <GridItem colSpan={{ base: 6, md: 2, lg: 2 }} bg={bg} p={6} rounded={'xl'} >
@@ -137,7 +142,9 @@ const BalancesPage = () => {
             </Menu>
           </Flex>
           <Box mt={2} overflow={'hidden'}>
-            <BalancesChart chartOption={BalancesChartData} width={'100%'} height={'330px'} />
+            {BalancesArray.length > 0 &&
+              <BalancesChart chartOption={BalancesChartData} width={'100%'} height={'330px'} />
+            }
           </Box>
         </GridItem>
       </Grid>
