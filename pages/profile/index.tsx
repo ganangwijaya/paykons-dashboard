@@ -181,7 +181,7 @@ const ProfilePage = () => {
   useEffect(() => {
     var mounted: boolean = true;
     const query = `query {
-      getMember(_id: "${id}") {
+      getMember(_id: "${id}", email: "") {
         _id
         name
         email
@@ -195,7 +195,7 @@ const ProfilePage = () => {
 
     const getMember = async () => {
       await axios.post(`/api/graphql`, { query }).then(res => {
-        const member = res.data.data.getMember[0];
+        const member = res.data.data.getMember;
         if (mounted) {
           setMember(member);
         }

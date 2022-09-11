@@ -125,14 +125,14 @@ const MemberPage = () => {
 
   return (
     <Stack mt={4} gap={2}>
-      <Grid templateColumns={'repeat(4, 1fr)'} gridAutoRows={'1fr'} gap={4}>
-        <GridItem colSpan={{ base: 4, md: 2, lg: 1 }} minW={0}>
+      <Grid templateColumns={{ base: 'repeat(1, 1fr)', md: 'repeat(4, 1fr)' }} templateRows={'repeat(1, 1fr)'} gap={4}>
+        <GridItem colSpan={{ base: 2, md: 2, lg: 1 }} minW={0}>
           <CondensedCard name={'Total Member'} data={totalData} icon={'ri-team-fill'} />
         </GridItem>
-        <GridItem colSpan={{ base: 4, md: 2, lg: 1 }} minW={0}>
+        <GridItem colSpan={{ base: 2, md: 2, lg: 1 }} minW={0}>
           <CondensedCard name={'Total Class'} data={totalClass} icon={'ri-ancient-gate-fill'} />
         </GridItem>
-        <GridItem colSpan={{ base: 4, md: 4, lg: 2 }}>
+        <GridItem colSpan={{ base: 2, md: 4, lg: 2 }}>
           <Flex h={'100%'} w={{ base: '100%', md: 'auto' }} p={4} bg={bg} rounded={'xl'} gap={6} alignItems={{ base: 'flex-start', md: 'center' }} justifyContent={'flex-end'} flexDir={{ base: 'column', md: 'row' }}>
             <Button w={{ base: '100%', md: 'auto' }} size={'sm'} fontWeight={'medium'} leftIcon={<i className="ri-spy-line"></i>} variant={'outline'}>View Member Log</Button>
             <Link href={'/member/add'} passHref>

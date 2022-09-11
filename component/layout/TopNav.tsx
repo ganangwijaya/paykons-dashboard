@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react"
 import { ChildMenu, DashboardMenu, PaymentMenu, PreferenceMenu } from "../../data/PageData";
+import { MobileSideNav } from "./SideNav";
 
 const GlassNav = css`
   background: rgba( 0, 0, 0, 0.3 );
@@ -59,63 +60,66 @@ const TopNav = () => {
 
   return (
     <Flex css={header == true ? NavOpt : NormalNav} pos={'sticky'} top={4} zIndex={1000} h={'60px'} px={4} py={2} rounded={'lg'} justifyContent={'space-between'} alignItems={'center'}>
-      <Box>
-        {
-          router.pathname == DashboardMenu.path ? (
-            <Breadcrumb fontSize={'xs'}>
-              <BreadcrumbItem>
-                <BreadcrumbLink>Page</BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbItem isCurrentPage>
-                <BreadcrumbLink>{DashboardMenu.title}</BreadcrumbLink>
-              </BreadcrumbItem>
-            </Breadcrumb>
-          ) :
-            PaymentMenu.filter(f => router.pathname == f.path).length > 0 ? (
+      <Flex gap={4} alignItems={'center'}>
+        <MobileSideNav />
+        <Box>
+          {
+            router.pathname == DashboardMenu.path ? (
               <Breadcrumb fontSize={'xs'}>
                 <BreadcrumbItem>
                   <BreadcrumbLink>Page</BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbItem isCurrentPage>
-                  <BreadcrumbLink>{PaymentMenu.filter(f => router.pathname == f.path)[0].title}</BreadcrumbLink>
+                  <BreadcrumbLink>{DashboardMenu.title}</BreadcrumbLink>
                 </BreadcrumbItem>
               </Breadcrumb>
             ) :
-              PreferenceMenu.filter(f => router.pathname == f.path).length > 0 ? (
+              PaymentMenu.filter(f => router.pathname == f.path).length > 0 ? (
                 <Breadcrumb fontSize={'xs'}>
                   <BreadcrumbItem>
                     <BreadcrumbLink>Page</BreadcrumbLink>
                   </BreadcrumbItem>
                   <BreadcrumbItem isCurrentPage>
-                    <BreadcrumbLink>{PreferenceMenu.filter(f => router.pathname == f.path)[0].title}</BreadcrumbLink>
+                    <BreadcrumbLink>{PaymentMenu.filter(f => router.pathname == f.path)[0].title}</BreadcrumbLink>
                   </BreadcrumbItem>
                 </Breadcrumb>
               ) :
-                ''
-        }
-
-        {ChildMenu.filter(f => router.pathname == f.path).length > 0 && (
-          <Breadcrumb fontSize={'xs'}>
-            <BreadcrumbItem>
-              <BreadcrumbLink>Page</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbItem>
-              <BreadcrumbLink>{ChildMenu.filter(f => router.pathname == f.path)[0].parent}</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbItem isCurrentPage>
-              <BreadcrumbLink>{ChildMenu.filter(f => router.pathname == f.path)[0].title}</BreadcrumbLink>
-            </BreadcrumbItem>
-          </Breadcrumb>
-        )}
-        <Heading as={'h2'} size={'md'}>
-          {
-            router.pathname == DashboardMenu.path ? DashboardMenu.title :
-              PaymentMenu.filter(f => router.pathname == f.path).length > 0 ? PaymentMenu.filter(f => router.pathname == f.path)[0].title :
-                PreferenceMenu.filter(f => router.pathname == f.path).length > 0 ? PreferenceMenu.filter(f => router.pathname == f.path)[0].title : ''
+                PreferenceMenu.filter(f => router.pathname == f.path).length > 0 ? (
+                  <Breadcrumb fontSize={'xs'}>
+                    <BreadcrumbItem>
+                      <BreadcrumbLink>Page</BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbItem isCurrentPage>
+                      <BreadcrumbLink>{PreferenceMenu.filter(f => router.pathname == f.path)[0].title}</BreadcrumbLink>
+                    </BreadcrumbItem>
+                  </Breadcrumb>
+                ) :
+                  ''
           }
-          {ChildMenu.filter(f => router.pathname == f.path).length > 0 && ChildMenu.filter(f => router.pathname == f.path)[0].title}
-        </Heading>
-      </Box>
+
+          {ChildMenu.filter(f => router.pathname == f.path).length > 0 && (
+            <Breadcrumb fontSize={'xs'}>
+              <BreadcrumbItem>
+                <BreadcrumbLink>Page</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbItem>
+                <BreadcrumbLink>{ChildMenu.filter(f => router.pathname == f.path)[0].parent}</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbItem isCurrentPage>
+                <BreadcrumbLink>{ChildMenu.filter(f => router.pathname == f.path)[0].title}</BreadcrumbLink>
+              </BreadcrumbItem>
+            </Breadcrumb>
+          )}
+          <Heading as={'h2'} size={'md'}>
+            {
+              router.pathname == DashboardMenu.path ? DashboardMenu.title :
+                PaymentMenu.filter(f => router.pathname == f.path).length > 0 ? PaymentMenu.filter(f => router.pathname == f.path)[0].title :
+                  PreferenceMenu.filter(f => router.pathname == f.path).length > 0 ? PreferenceMenu.filter(f => router.pathname == f.path)[0].title : ''
+            }
+            {ChildMenu.filter(f => router.pathname == f.path).length > 0 && ChildMenu.filter(f => router.pathname == f.path)[0].title}
+          </Heading>
+        </Box>
+      </Flex>
       <Flex gap={3} alignItems={'center'}>
         <Button onClick={toggleColorMode} size={'xs'} variant={'unstyled'}><i className="ri-sun-line"></i></Button>
         <Menu>

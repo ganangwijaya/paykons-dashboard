@@ -1,9 +1,10 @@
-import { Box, Button, Flex, Heading, IconButton, Stack, Text, Tooltip } from "@chakra-ui/react"
+import { Box, Button, Drawer, DrawerBody, DrawerCloseButton, DrawerContent, DrawerHeader, DrawerOverlay, Flex, Heading, IconButton, Stack, Text, Tooltip } from "@chakra-ui/react"
 import { useDisclosure, useColorModeValue } from "@chakra-ui/react"
 import Link from "next/link"
 import { useRouter } from 'next/router'
 import { motion, AnimatePresence } from "framer-motion";
 import { DashboardMenu, PaymentMenu, PreferenceMenu } from "../../data/PageData";
+import { useRef } from "react";
 
 interface NavItemProps {
   icon: string,
@@ -22,10 +23,10 @@ const NavItem = ({ icon, text, url, isOpen }: NavItemProps) => {
 
   return (
     <Link href={url}>
-      <Button variant={'unstyled'} size={'sm'} _focus={{ boxShadow: 'none' }}>
+      <Button variant={'unstyled'} size={'sm'} _focus={{ boxShadow: 'none' }} height={'auto'}>
         <Tooltip label={text} placement={'right'} size={'xs'} isDisabled={isOpen ? true : false}>
-          <Flex alignItems={'center'} cursor={'pointer'} p={1.5} role={'group'}>
-            <Flex color={parentpath == url ? 'gray.100' : iconColor} w={6} h={6} minW={6} alignItems={'center'} justifyContent={'center'} fontSize={'md'} fontWeight={'light'} bg={parentpath == url ? 'blue.400' : iconBG} _groupHover={{ bg: 'blue.400', color: iconColorActive }} transition={'all 0.2s ease-in'} rounded={'md'}><i className={icon}></i></Flex>
+          <Flex alignItems={'center'} cursor={'pointer'} p={1.5} role={'group'} gap={{ base: 2, md: 0 }}>
+            <Flex color={parentpath == url ? 'gray.100' : iconColor} w={{ base: 8, md: 6 }} h={{ base: 8, md: 6 }} minW={{ base: 8, md: 6 }} alignItems={'center'} justifyContent={'center'} fontSize={{ base: 'lg', md: 'md' }} fontWeight={'light'} bg={parentpath == url ? 'blue.400' : iconBG} _groupHover={{ bg: 'blue.400', color: iconColorActive }} transition={'all 0.2s ease-in'} rounded={'md'}><i className={icon}></i></Flex>
             <AnimatePresence initial={false}>
               {isOpen &&
                 <motion.div
@@ -43,7 +44,7 @@ const NavItem = ({ icon, text, url, isOpen }: NavItemProps) => {
                   }}
                   transition={{ duration: 0.6, ease: "easeInOut" }}
                 >
-                  <Text pl={2} fontSize={'xs'} margin={0} fontWeight={'semibold'}>{text}</Text>
+                  <Text pl={2} fontSize={{ base: 'sm', md: 'xs' }} margin={0} fontWeight={'semibold'}>{text}</Text>
                 </motion.div>
               }
             </AnimatePresence>
@@ -157,7 +158,6 @@ const SideNav = () => {
             </Stack>
           </Stack>
         </Box>
-
         <Box borderTop={'1px solid'} borderColor={borderBack} p={2}>
           <motion.div
             animate={isOpen ? 'open' : 'collapsed'}
@@ -196,7 +196,49 @@ const SideNav = () => {
         </Box>
       </Flex>
     </Box>
+  )
+}
 
+export const MobileSideNav = () => {
+  const { isOpen, onOpen, onClose } = useDisclosure()
+  const btnRef = useRef<HTMLButtonElement>(null)
+  const bg = useColorModeValue('gray.50', 'gray.800');
+
+  return (
+    <>
+      <IconButton display={{ base: 'inline-flex', md: 'none' }} aria-label="NavButton" ref={btnRef} size={'sm'} variant={'ghost'} onClick={onOpen}>
+        <i className="ri-menu-2-fill"></i>
+      </IconButton>
+      <Drawer
+        isOpen={isOpen}
+        placement={'left'}
+        onClose={onClose}
+        finalFocusRef={btnRef}
+      >
+        <DrawerOverlay />
+        <DrawerContent bg={bg}>
+          <DrawerCloseButton mt={2} />
+          <DrawerHeader fontSize={'1.25rem'} fontWeight={'bold'}>PayKons</DrawerHeader>
+          <DrawerBody>
+            <Stack gap={3}>
+              <NavItem isOpen={isOpen} icon={DashboardMenu.icon} text={DashboardMenu.title} url={DashboardMenu.path} />
+              <Heading as={'h4'} size={'sm'}>Payment</Heading>
+              <Stack>
+                {PaymentMenu.map((menu, index) => (
+                  <NavItem key={index} isOpen={isOpen} icon={menu.icon} text={menu.title} url={menu.path} />
+                ))}
+              </Stack>
+              <Heading as={'h4'} size={'sm'}>Preference</Heading>
+              <Stack>
+                {PreferenceMenu.map((menu, index) => (
+                  <NavItem key={index} isOpen={isOpen} icon={menu.icon} text={menu.title} url={menu.path} />
+                ))}
+              </Stack>
+            </Stack>
+          </DrawerBody>
+        </DrawerContent>
+      </Drawer>
+    </>
   )
 }
 

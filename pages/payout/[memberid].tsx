@@ -305,8 +305,8 @@ const MemberPayoutPage = () => {
 
   return (
     <Stack mt={4} gap={2}>
-      <Grid templateColumns={{ base: 'repeat(1, 1fr)', md: 'repeat(5, 1fr)' }} gap={4} gridAutoRows={'1fr'}>
-        <GridItem colSpan={3} minW={0}>
+      <Grid templateColumns={{ base: 'repeat(1, 1fr)', md: 'repeat(5, 1fr)' }} gridAutoRows={{ base: 'auto', md: '1fr' }} gap={4} >
+        <GridItem colSpan={{ base: 1, sm: 5, lg: 3 }} minW={0}>
           <Flex p={4} bg={bg} rounded={'xl'} gap={6} alignItems={{ base: 'flex-start', md: 'center' }} justifyContent={{ base: 'flex-end', md: 'space-between' }} flexDir={{ base: 'column', md: 'row' }}>
             <Flex gap={4} alignItems={'center'}>
               <Flex minW={10} w={16} h={16} bg={'iconBG'} color={iconColor} justifyContent={'center'} alignItems={'center'} fontSize={'xl'}>
@@ -321,11 +321,12 @@ const MemberPayoutPage = () => {
               <Link href={`/member/${memberid}`} passHref>
                 <Button size={'sm'} fontWeight={'medium'} leftIcon={<i className="ri-profile-line"></i>} variant={'outline'}>View Profile</Button>
               </Link>
+              <Button size={'sm'} fontWeight={'medium'} leftIcon={<i className="ri-message-2-line"></i>} variant={'outline'}>Send Message</Button>
             </Flex>
           </Flex>
         </GridItem>
-        <GridItem colSpan={2} minW={0}>
-          <Flex p={4} bg={bg} rounded={'xl'} gap={4} alignItems={'center'} justifyContent={'space-between'} h={'100%'}>
+        <GridItem colSpan={{ base: 1, sm: 5, lg: 2 }} minW={0}>
+          <Flex p={4} bg={bg} rounded={'xl'} gap={4} alignItems={{ base: 'flexcen', md: 'center' }} justifyContent={{ base: 'center', md: 'space-between' }} flexDir={{ base: 'column', md: 'row' }} h={'100%'}>
             <Flex gap={4}>
               <Flex minW={10} w={10} h={10} bg={totalPayouts.thisMonth > 0 ? increaseColor : decreaseColor} color={iconColor} justifyContent={'center'} alignItems={'center'} rounded={'full'} fontSize={'xl'}><i className="ri-hand-coin-fill"></i></Flex>
               <Box>
@@ -338,9 +339,6 @@ const MemberPayoutPage = () => {
                   </Flex>
                 </Flex>
               </Box>
-            </Flex>
-            <Flex gap={2} alignItems={'center'} justifyContent={'flex-end'} w={{ base: '100%', md: 'auto' }}>
-              <Button size={'sm'} fontWeight={'medium'} leftIcon={<i className="ri-message-2-line"></i>} variant={'outline'}>Send Message</Button>
             </Flex>
           </Flex>
         </GridItem>
