@@ -29,7 +29,7 @@ const Auth = async (req: NextApiRequest, res: NextApiResponse) => {
           }`
 
           try {
-            const res = await axios.post('http://localhost:3000/api/graphql', { query });
+            const res = await axios.post(`${process.env.API_AUTH_URL}/api/graphql`, { query });
 
             if (res) {
               const status = res.data.data.getAuth.status;
