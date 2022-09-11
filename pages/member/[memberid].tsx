@@ -2,6 +2,7 @@ import { ReactElement, useEffect, useState } from "react"
 
 import Head from 'next/head'
 import axios from "axios"
+import { GetServerSideProps } from "next"
 import { Avatar, Box, Button, chakra, Divider, Flex, Grid, GridItem, Heading, List, ListItem, Stack, Tag, Text } from '@chakra-ui/react'
 import { useColorModeValue } from '@chakra-ui/react'
 
@@ -11,7 +12,25 @@ import { MemberState, RoleState } from "../../utils/interface"
 
 import { useRouter } from "next/router"
 import { RoleData } from "../../data/RoleData"
+import { getSession } from "next-auth/react"
 
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const session = await getSession(context);
+
+  if (!session) {
+    return {
+      redirect: {
+        destination: '/auth',
+        permanent: false
+      }
+    }
+  }
+  return {
+    props: {
+      session: session,
+    },
+  }
+}
 const MemberDetailPage = () => {
   const router = useRouter()
   const { memberid } = router.query

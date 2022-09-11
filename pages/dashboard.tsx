@@ -10,8 +10,9 @@ import { useColorModeValue } from '@chakra-ui/react'
 
 import DashboardLayout from "../component/layout/DashboardLayout"
 import { BalancesData } from "../data/BalancesData"
-import { BalancesCharts, MemberChartData } from "../data/ChartData"
-
+import { PayoutMemberData } from "../data/PayoutData"
+import { BalancesCharts, PayoutCharts } from "../data/ChartData"
+import { CondensedCard } from "../component/Card"
 
 const ChartCashFlow = dynamic(
   () => import('../component/Chart'),
@@ -43,76 +44,40 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
 const DashboardPage = () => {
   const bg = useColorModeValue('gray.50', 'gray.800');
-  const iconBG = useColorModeValue('blue.500', 'blue.400');
-  const iconColor = useColorModeValue('gray.100', 'gray.100');
-  const increaseColor = useColorModeValue('green.500', 'green.400');
-  const decreaseColor = useColorModeValue('red.500', 'red.400');
 
   const [BalancesArray] = BalancesData();
-  const [CashFlowChartData, BalancesChartData] = BalancesCharts(BalancesArray)
+  const payoutMemberData = PayoutMemberData();
+
+  const [CashFlowChartData] = BalancesCharts(BalancesArray)
+  const [MemberPayoutChartData] = PayoutCharts(payoutMemberData)
+
+  var totalBalances = 0;
+  var totalIncome = 0;
+  var totalOutcome = 0;
+
+  BalancesArray.map(i => {
+    totalBalances = totalBalances + i.balance;
+  })
+
+  BalancesArray.filter(f => f.month == new Date().getFullYear() + '-' + Intl.DateTimeFormat('id-ID', { month: '2-digit' }).format(new Date())).map(i => {
+    totalIncome = totalIncome + i.income;
+    totalOutcome = totalOutcome + i.outcome;
+  })
 
   return (
     <Stack mt={4} gap={2}>
       <Grid templateColumns={{ base: 'repeat(1, 1fr)', md: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }} gap={4}>
         <GridItem>
-          <Flex p={4} bg={bg} rounded={'xl'} gap={4} alignItems={'center'}>
-            <Flex w={10} h={10} bg={iconBG} color={iconColor} justifyContent={'center'} alignItems={'center'} rounded={'full'} fontSize={'xl'}><i className="ri-wallet-3-fill"></i></Flex>
-            <Box>
-              <Text fontSize={'xs'}>Balances</Text>
-              <Flex gap={1} alignItems={'flex-end'}>
-                <Heading as={'h4'} size={'md'}>Rp1.400.000</Heading>
-                <Flex fontSize={'sm'} color={decreaseColor} alignItems={'center'}>
-                  <i className="ri-arrow-down-s-fill"></i>
-                  <Text fontWeight={'bold'}>10%</Text>
-                </Flex>
-              </Flex>
-            </Box>
-          </Flex>
+          <CondensedCard name={'Balances'} data={new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, notation: 'compact' }).format(totalBalances)} icon={'ri-wallet-3-fill'} />
         </GridItem>
         <GridItem>
-          <Flex p={4} bg={bg} rounded={'xl'} gap={4} alignItems={'center'}>
-            <Flex w={10} h={10} bg={iconBG} color={iconColor} justifyContent={'center'} alignItems={'center'} rounded={'full'} fontSize={'xl'}><i className="ri-hand-coin-fill"></i></Flex>
-            <Box>
-              <Text fontSize={'xs'}>Income this month</Text>
-              <Flex gap={1} alignItems={'flex-end'}>
-                <Heading as={'h4'} size={'md'}>Rp2.400.000</Heading>
-                <Flex fontSize={'sm'} color={increaseColor} alignItems={'center'}>
-                  <i className="ri-arrow-up-s-fill"></i>
-                  <Text fontWeight={'bold'}>15%</Text>
-                </Flex>
-              </Flex>
-            </Box>
-          </Flex>
+          <CondensedCard name={'Income this month'} data={new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, notation: 'compact' }).format(totalIncome)} icon={'ri-hand-coin-fill'} />
         </GridItem>
         <GridItem>
-          <Flex p={4} bg={bg} rounded={'xl'} gap={4} alignItems={'center'}>
-            <Flex w={10} h={10} bg={iconBG} color={iconColor} justifyContent={'center'} alignItems={'center'} rounded={'full'} fontSize={'xl'}><i className="ri-bank-card-fill"></i></Flex>
-            <Box>
-              <Text fontSize={'xs'}>Spend this month</Text>
-              <Flex gap={1} alignItems={'flex-end'}>
-                <Heading as={'h4'} size={'md'}>Rp1.000.000</Heading>
-                <Flex fontSize={'sm'} color={decreaseColor} alignItems={'center'}>
-                  <i className="ri-arrow-down-s-fill"></i>
-                  <Text fontWeight={'bold'}>10%</Text>
-                </Flex>
-              </Flex>
-            </Box>
-          </Flex>
+          <CondensedCard name={'Spend this month'} data={new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, notation: 'compact' }).format(totalOutcome)} icon={'ri-bank-card-fill'} />
         </GridItem>
         <GridItem>
-          <Flex p={4} bg={bg} rounded={'xl'} gap={4} alignItems={'center'}>
-            <Flex w={10} h={10} bg={iconBG} color={iconColor} justifyContent={'center'} alignItems={'center'} rounded={'full'} fontSize={'xl'}><i className="ri-team-fill"></i></Flex>
-            <Box>
-              <Text fontSize={'xs'}>Total member</Text>
-              <Flex gap={1} alignItems={'flex-end'}>
-                <Heading as={'h4'} size={'md'}>27</Heading>
-                <Flex fontSize={'sm'} color={increaseColor} alignItems={'center'}>
-                  <i className="ri-arrow-up-s-fill"></i>
-                  <Text fontWeight={'bold'}>10%</Text>
-                </Flex>
-              </Flex>
-            </Box>
-          </Flex>
+          <CondensedCard name={'Total member'} data={payoutMemberData !== undefined ? payoutMemberData.notPaid.length + payoutMemberData.paid.length : 0} icon={'ri-team-fill'} />
         </GridItem>
       </Grid>
       <Grid templateColumns={'repeat(3, 1fr)'} gap={4}>
@@ -150,7 +115,9 @@ const DashboardPage = () => {
             </Menu>
           </Flex>
           <Box mt={10}>
-            <ChartMember chartOption={MemberChartData} width={'100%'} height={'320px'} />
+            {MemberPayoutChartData !== undefined &&
+              <ChartMember chartOption={MemberPayoutChartData} width={'100%'} height={'320px'} />
+            }
           </Box>
         </GridItem>
       </Grid>

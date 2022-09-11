@@ -1,6 +1,12 @@
 import { ObjectId } from "mongodb";
 import { connectToDatabase } from "../../../lib/mongodb";
+import { MemberState, PayoutState } from "../../../utils/interface";
 const bcrypt = require('bcryptjs');
+
+interface PaginationProps {
+  limit: number,
+  page: number
+}
 
 export const resolvers = {
   Query: {
@@ -9,7 +15,8 @@ export const resolvers = {
       const member = await db.collection("member").find().toArray();
       return [...member]
     },
-    getMember: async (_: any, { _id, email }: { _id: string, email: string }) => {
+    getMember: async (_: any, args: MemberState) => {
+      const { _id, email } = args;
       let { db } = await connectToDatabase();
 
       if (email == "") {
@@ -86,14 +93,150 @@ export const resolvers = {
 
       return [...payout]
     },
-    getPayouts: async (_: any, { _id, pic }: { _id: String, pic: String }) => {
+    getPayouts: async (_: any, args: PayoutState) => {
+      const { pic = null, payoutDate = null } = args;
       let { db } = await connectToDatabase();
-      const payout = await db.collection("payout").aggregate([
-        {
-          $match: {
-            pic: `${pic}`
+
+      if (payoutDate && pic) {
+        const payout = await db.collection("payout").aggregate([
+          {
+            $match: {
+              payoutDate: new RegExp(`${payoutDate}`),
+              pic: `${pic}`
+            }
+          },
+          {
+            $lookup: {
+              from: "member",
+              localField: "pic",
+              foreignField: "email",
+              as: "member"
+            }
+          },
+          {
+            $addFields: {
+              member: {
+                $cond: {
+                  'if': {
+                    $gte: [{
+                      $size: '$member'
+                    },
+                      1
+                    ]
+                  },
+                  then: '$member',
+                  'else': {
+                    name: '$pic'
+                  }
+                }
+              }
+            }
+          },
+          {
+            $unwind: {
+              path: "$member"
+            }
           }
-        },
+        ]).toArray()
+
+        return [...payout]
+      } else {
+        const payout = await db.collection("payout").aggregate([
+          {
+            $match: {
+              pic: `${pic}`
+            }
+          },
+          {
+            $lookup: {
+              from: "member",
+              localField: "pic",
+              foreignField: "email",
+              as: "member"
+            }
+          },
+          {
+            $addFields: {
+              member: {
+                $cond: {
+                  'if': {
+                    $gte: [{
+                      $size: '$member'
+                    },
+                      1
+                    ]
+                  },
+                  then: '$member',
+                  'else': {
+                    name: '$pic'
+                  }
+                }
+              }
+            }
+          },
+          {
+            $unwind: {
+              path: "$member"
+            }
+          }
+        ]).toArray()
+
+        return [...payout]
+      }
+
+    },
+    getTotalPayouts: async (_: any, args: PayoutState) => {
+      const { pic = null, payoutDate = null } = args;
+      let { db } = await connectToDatabase();
+
+      if (pic) {
+        if (payoutDate) {
+          const payout = await db.collection("payout").aggregate([
+            {
+              $match: {
+                payoutDate: new RegExp(`${payoutDate}`),
+                pic: `${pic}`
+              }
+            },
+            {
+              $group: {
+                _id: null,
+                totalAmount: {
+                  $sum: '$amount'
+                }
+              }
+            }
+          ]).toArray();
+          return payout[0].totalAmount
+        } else {
+          const payout = await db.collection("payout").aggregate([
+            {
+              $match: {
+                pic: `${pic}`
+              }
+            },
+            {
+              $group: {
+                _id: null,
+                totalAmount: {
+                  $sum: '$amount'
+                }
+              }
+            }
+          ]).toArray();
+          return payout[0].totalAmount
+        }
+
+      } else {
+        return 0
+      }
+
+    },
+    pagePayouts: async (_: any, args: PaginationProps) => {
+      const { limit = 1, page = 1 } = args;
+      let { db } = await connectToDatabase();
+
+      const payoutQuery = [
         {
           $lookup: {
             from: "member",
@@ -125,10 +268,163 @@ export const resolvers = {
           $unwind: {
             path: "$member"
           }
+        },
+        {
+          $facet: {
+            count: [{
+              $count: 'count'
+            }],
+            total: [{
+              $group: {
+                _id: null,
+                total: {
+                  $sum: '$amount'
+                }
+              }
+            }],
+            result: [{
+              $skip: page > 0 ? (page - 1) * limit : 0
+            },
+            {
+              $limit: limit
+            }
+            ]
+          }
+        },
+        {
+          $unwind: {
+            path: '$count'
+          }
+        },
+        {
+          $unwind: {
+            path: '$total'
+          }
+        },
+        {
+          $project: {
+            count: '$count.count',
+            totalPayout: '$total.total',
+            result: true
+          }
         }
-      ]).toArray()
+      ]
 
-      return [...payout]
+      const [payout] = await db.collection("payout").aggregate(payoutQuery).toArray()
+      const { result, count, totalPayout } = payout
+
+      return {
+        count: count,
+        prev: (limit * page) > count ? 0 : (limit * page) - limit,
+        next: (limit * page) > count ? 0 : count - (limit * page),
+        currentPage: page,
+        totalPages: count < limit ? 1 : Math.round(count / limit),
+        totalPayout: totalPayout,
+        result: [...result],
+      }
+    },
+
+    getMemberPayouts: async () => {
+      let { db } = await connectToDatabase();
+
+      const member = await db.collection("member").aggregate([{
+        $lookup: {
+          from: 'payout',
+          'let': {
+            member_email: '$email'
+          },
+          pipeline: [
+            {
+              $match: {
+                payoutDate: RegExp("2022-09")
+              }
+            },
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: [
+                        '$pic',
+                        '$$member_email'
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          as: 'payout'
+        }
+      }, {
+        $facet: {
+          notPaid: [
+            {
+              $match: {
+                payout: {
+                  $size: 0
+                }
+              }
+            },
+            {
+              $project: {
+                email: '$email'
+              }
+            }
+          ],
+          paid: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $ne: [
+                        '$payout',
+                        []
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              $project: {
+                email: '$email',
+                confirmedPayout: {
+                  $size: {
+                    $filter: {
+                      input: '$payout',
+                      as: 'pay',
+                      cond: {
+                        $eq: [
+                          '$$pay.status',
+                          'confirmed'
+                        ]
+                      }
+                    }
+                  }
+                },
+                unconfirmedPayout: {
+                  $size: {
+                    $filter: {
+                      input: '$payout',
+                      as: 'pay',
+                      cond: {
+                        $eq: [
+                          '$$pay.status',
+                          'unconfirmed'
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }]).toArray()
+
+      return ({ notPaid: member[0].notPaid, paid: member[0].paid })
     }
   },
   Mutation: {

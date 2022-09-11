@@ -162,7 +162,7 @@ const ProfilePage = () => {
   const iconColor = useColorModeValue('gray.100', 'gray.100');
   const toast = useToast()
 
-  const initialMemberData = {
+  const initialMemberData: MemberState = {
     id: 0,
     name: '',
     email: '',
@@ -172,6 +172,7 @@ const ProfilePage = () => {
     role: 0,
     _id: '',
     _lastUpdate: '',
+    _createdAt: ''
   }
   const [member, setMember] = useState<MemberState>(initialMemberData)
   const [role, setRole] = useState<RoleState>()

@@ -11,7 +11,7 @@ const DashboardLayout = ({ children }: Props) => {
   const bg = useColorModeValue('linear(blue.500 40%, white 40%)', 'gray.900');
   
   return (
-    <Flex bg={bg} bgGradient={bg} flexDir={{base: 'column', md: 'row'}} w={'100vw'}>
+    <Flex bg={bg} bgGradient={bg} flexDir={{base: 'column', md: 'row'}} w={'100%'}>
       <SideNav />
       <Box flexGrow={2} p={4} minH={'100vh'}>
         <TopNav />

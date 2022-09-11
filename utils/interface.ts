@@ -68,3 +68,15 @@ export interface BalanceState {
   outcome: number,
   balance: number
 }
+
+interface MemberPayout {
+  _id: string,
+  email: string,
+  confirmedPayout: number,
+  unconfirmedPayout: number,
+}
+
+export interface MemberPayoutState {
+  notPaid: MemberPayout[],
+  paid: MemberPayout[]
+}

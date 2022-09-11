@@ -56,6 +56,28 @@ export const typeDefs = gql`
     _createdAt: String
   }
 
+  type PayoutPagination {
+    count: Int,
+    prev: Int,
+    next: Int,
+    currentPage: Int,
+    totalPages: Int,
+    totalPayout: Int,
+    result: [Payout],
+  }
+
+  type MemberPayout {
+    _id: String,
+    email: String,
+    confirmedPayout: Int,
+    unconfirmedPayout: Int,
+  }
+
+  type MemberPayouts {
+    notPaid: [MemberPayout],
+    paid: [MemberPayout],
+  }
+
   type Query {
     member: [Member]!
     getMember(_id: String!, email: String!): Member
@@ -64,7 +86,12 @@ export const typeDefs = gql`
     transactions: [Transaction]!
     
     payouts: [Payout]!
-    getPayouts(_id: String, pic: String): [Payout]!
+    getPayouts(_id: String, pic: String, payoutDate: String): [Payout]!
+    getTotalPayouts(_id: String, pic: String, payoutDate: String): Int!
+    getMemberPayouts: MemberPayouts! 
+    
+    pagePayouts(limit: Int!, page: Int!): PayoutPagination!
+
   }
 
   type Mutation {

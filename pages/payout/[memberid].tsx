@@ -2,9 +2,10 @@ import { ReactElement, useEffect, useMemo, useState } from "react"
 
 import Head from 'next/head'
 import Link from "next/link"
+import { GetServerSideProps } from "next"
 import axios from "axios"
 import { useRouter } from "next/router"
-import { useSession } from "next-auth/react"
+import { getSession, useSession } from "next-auth/react"
 
 import { Avatar, Badge, Box, Button, ButtonGroup, Flex, Grid, GridItem, Heading, IconButton, Menu, MenuButton, MenuDivider, MenuItemOption, MenuList, MenuOptionGroup, Popover, PopoverArrow, PopoverBody, PopoverCloseButton, PopoverContent, PopoverFooter, PopoverHeader, PopoverTrigger, Select, Stack, TableContainer, Tag, TagCloseButton, TagLabel, Text, useToast } from '@chakra-ui/react'
 import { Table, Thead, Tbody, Tr, Th, Td, chakra } from '@chakra-ui/react'
@@ -15,10 +16,28 @@ import DashboardLayout from "../../component/layout/DashboardLayout"
 import { DebouncedInput, Filter } from "../../component/table/FormFilter"
 
 import { MemberState, PayoutState } from "../../utils/interface"
-import { MemberData } from "../../data/MemberData"
 import { PayoutMenuComponent } from "../../component/table/PayoutDataMenu"
 
 import { ConfirmPayout, DeletePayout, EditPayout } from "../../utils/handler"
+import { CondensedCard } from "../../component/Card"
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const session = await getSession(context);
+
+  if (!session) {
+    return {
+      redirect: {
+        destination: '/auth',
+        permanent: false
+      }
+    }
+  }
+  return {
+    props: {
+      session: session,
+    },
+  }
+}
 
 const MemberPayoutPage = () => {
   const { data: session } = useSession();
@@ -47,17 +66,13 @@ const MemberPayoutPage = () => {
 
   const [payout, setPayout] = useState<PayoutState[]>([])
   const [member, setMember] = useState<MemberState>(initialMemberData)
+  const [totalPayouts, setTotalPayouts] = useState({ all: 0, thisMonth: 0 })
 
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [filteredDate, setFilteredDate] = useState<string | 'day' | 'month' | 'year'>('month');
   const columnHelper = createColumnHelper<PayoutState>();
   const [reRender, setReRender] = useState(false)
-
-  var totalamount: number = 0;
-  var totalData: number = 0;
-  var totalConfirmed: number = 0;
-  var totalUnconfirmed: number = 0;
 
   const data: PayoutState[] = useMemo(
     () => [...payout], [payout],
@@ -101,73 +116,6 @@ const MemberPayoutPage = () => {
     onSortingChange: setSorting, getSortedRowModel: getSortedRowModel(),
     getCoreRowModel: getCoreRowModel(), getPaginationRowModel: getPaginationRowModel(),
   })
-
-
-  if (table.getFilteredRowModel().rows.length > 0) {
-    totalData = table.getFilteredRowModel().rows.length;
-    table.getFilteredRowModel().rows.map(d => {
-      totalamount = totalamount + d.original.amount;
-      totalConfirmed = d.original.status == 'confirmed' ? totalConfirmed + 1 : totalConfirmed;
-      totalUnconfirmed = d.original.status == 'unconfirmed' ? totalUnconfirmed + 1 : totalUnconfirmed;
-    })
-  }
-
-  useEffect(() => {
-    if (memberid !== undefined) {
-      setMember({ ...MemberData.filter(f => f.id == Number(memberid))[0] });
-    }
-
-    return () => { }
-  }, [memberid])
-
-  const d = new Date();
-  const payoutThisMonth = data.filter(f => f.payoutDate.includes(d.getFullYear() + '-' + Intl.DateTimeFormat('id-ID', { month: '2-digit' }).format(d)));
-  var totalPayoutThisMonth: number = 0;
-
-  if (payoutThisMonth.length > 0) {
-    payoutThisMonth.map(p => {
-      totalPayoutThisMonth = totalPayoutThisMonth + p.amount;
-    })
-  }
-
-  const submitTransaction = async (data: PayoutState) => {
-    const querySubmit = `mutation Mutation {
-      addPayout(
-        pic: "${data.pic}"
-        payoutDate: "${data.payoutDate}"
-        amount: ${data.amount}
-        evidence: "${data.evidence}"
-        status: "unconfirmed"
-      ) {
-        success
-        message
-      }
-    }`
-
-    await axios.post('/api/graphql', { query: querySubmit }).then(res => {
-      const payout = res.data.data.addPayout;
-      if (payout.success == true) {
-        toast({
-          title: 'Transaction Data Submitted',
-          description: `${payout.message}`,
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-          position: 'top-right',
-        });
-        setReRender(r => !r);
-      } else {
-        toast({
-          title: 'Error',
-          description: `${payout.message}`,
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-          position: 'top-right',
-        });
-      }
-    })
-  }
 
   const editPayout = async (data: PayoutState) => {
     await EditPayout(data).then(
@@ -280,8 +228,41 @@ const MemberPayoutPage = () => {
       getMember();
     }
 
-    return () => { }
+    return () => { mounted = false; }
   }, [memberid])
+
+  useEffect(() => {
+    var mounted: boolean = true;
+    const query = `query Query {
+      getTotalPayouts(pic: "ganang@paykons.com", payoutDate: "")
+    }`
+
+    const queryThisMonth = `query Query {
+      getTotalPayouts(pic: "ganang@paykons.com", payoutDate: "${new Date().getFullYear() + '-' + Intl.DateTimeFormat('id-ID', { month: '2-digit' }).format(new Date())}")
+    }`
+
+    const getTotalPayouts = async () => {
+      await axios.post(`/api/graphql`, { query }).then(res => {
+        const totalPayout = res.data.data.getTotalPayouts;
+        if (mounted) {
+          setTotalPayouts(t => ({ ...t, all: totalPayout }))
+        }
+      })
+
+      await axios.post(`/api/graphql`, { query: queryThisMonth }).then(res => {
+        const totalPayout = res.data.data.getTotalPayouts;
+        if (mounted) {
+          setTotalPayouts(t => ({ ...t, thisMonth: totalPayout }))
+        }
+      })
+    }
+
+    if (member.email !== "") {
+      getTotalPayouts();
+    }
+
+    return () => { mounted = false; }
+  }, [member.email])
 
   useEffect(() => {
     var mounted: boolean = true;
@@ -346,11 +327,11 @@ const MemberPayoutPage = () => {
         <GridItem colSpan={2} minW={0}>
           <Flex p={4} bg={bg} rounded={'xl'} gap={4} alignItems={'center'} justifyContent={'space-between'} h={'100%'}>
             <Flex gap={4}>
-              <Flex minW={10} w={10} h={10} bg={totalPayoutThisMonth > 0 ? increaseColor : decreaseColor} color={iconColor} justifyContent={'center'} alignItems={'center'} rounded={'full'} fontSize={'xl'}><i className="ri-hand-coin-fill"></i></Flex>
+              <Flex minW={10} w={10} h={10} bg={totalPayouts.thisMonth > 0 ? increaseColor : decreaseColor} color={iconColor} justifyContent={'center'} alignItems={'center'} rounded={'full'} fontSize={'xl'}><i className="ri-hand-coin-fill"></i></Flex>
               <Box>
                 <Text fontSize={'xs'}>Payout This {Intl.DateTimeFormat('id-ID', { month: 'long' }).format(new Date())}</Text>
                 <Flex gap={1} alignItems={'flex-end'}>
-                  <Heading as={'h4'} size={'md'}>{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, notation: 'standard' }).format(totalPayoutThisMonth)}</Heading>
+                  <Heading as={'h4'} size={'md'}>{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, notation: 'standard' }).format(totalPayouts.thisMonth)}</Heading>
                   <Flex fontSize={10} color={increaseColor} alignItems={'center'}>
                     <i className="ri-arrow-up-s-fill"></i>
                     <Text fontWeight={'bold'}>10%</Text>
@@ -366,19 +347,7 @@ const MemberPayoutPage = () => {
       </Grid>
       <Grid templateColumns={'repeat(4, 1fr)'} gap={4}>
         <GridItem colSpan={{ base: 4, md: 2, lg: 1 }} minW={0}>
-          <Flex p={4} bg={bg} rounded={'xl'} gap={4} alignItems={'center'}>
-            <Flex minW={10} w={10} h={10} bg={iconBG} color={iconColor} justifyContent={'center'} alignItems={'center'} rounded={'full'} fontSize={'xl'}><i className="ri-wallet-3-fill"></i></Flex>
-            <Box>
-              <Text fontSize={'xs'}>Total Amount</Text>
-              <Flex gap={1} alignItems={'flex-end'}>
-                <Heading as={'h4'} size={'md'}>{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, notation: 'standard' }).format(totalamount)}</Heading>
-                <Flex fontSize={10} color={increaseColor} alignItems={'center'}>
-                  <i className="ri-arrow-up-s-fill"></i>
-                  <Text fontWeight={'bold'}>10%</Text>
-                </Flex>
-              </Flex>
-            </Box>
-          </Flex>
+          <CondensedCard name={'Total Payout'} data={new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, notation: 'standard' }).format(totalPayouts.all)} icon={'ri-wallet-3-fill'} />
         </GridItem>
         <GridItem colSpan={{ base: 4, md: 2, lg: 1 }} minW={0}>
           <Flex p={4} bg={bg} rounded={'xl'} gap={4} alignItems={'center'}>
@@ -386,7 +355,7 @@ const MemberPayoutPage = () => {
             <Box>
               <Text fontSize={'xs'}>Total Data</Text>
               <Flex gap={1} alignItems={'flex-end'}>
-                <Heading as={'h4'} size={'md'}>{totalData}</Heading>
+                <Heading as={'h4'} size={'md'}>{payout.length}</Heading>
                 <Flex fontSize={10} color={increaseColor} alignItems={'center'}>
                   <i className="ri-arrow-up-s-fill"></i>
                   <Text fontWeight={'bold'}>10%</Text>
@@ -401,7 +370,7 @@ const MemberPayoutPage = () => {
             <Box>
               <Text fontSize={'xs'}>Total Confirmed</Text>
               <Flex gap={1} alignItems={'flex-end'}>
-                <Heading as={'h4'} size={'md'}>{totalConfirmed}</Heading>
+                <Heading as={'h4'} size={'md'}>{payout.filter(f => f.status == "confirmed").length}</Heading>
               </Flex>
             </Box>
           </Flex>
@@ -412,7 +381,7 @@ const MemberPayoutPage = () => {
             <Box>
               <Text fontSize={'xs'}>Total Unconfirmed</Text>
               <Flex gap={1} alignItems={'flex-end'}>
-                <Heading as={'h4'} size={'md'}>{totalUnconfirmed}</Heading>
+                <Heading as={'h4'} size={'md'}>{payout.filter(f => f.status == "unconfirmed").length}</Heading>
               </Flex>
             </Box>
           </Flex>
@@ -425,18 +394,6 @@ const MemberPayoutPage = () => {
               <Heading as={'h4'} size={'md'}>Member Payout Data</Heading>
               <Text mt={2} fontSize={'xs'}>Payout data.</Text>
               <Flex gap={2} mt={4}>
-                {columnFilters.length > 0 && columnFilters.map((i, x) => (
-                  <Tag key={x} size={'sm'}>
-                    <TagLabel>
-                      {i.id == 'memberID' ?
-                        <>{MemberData.filter(f => f.id == i.value)[0].name}</>
-                        :
-                        <>{String(i.value)}</>
-                      }
-                    </TagLabel>
-                    <TagCloseButton onClick={() => setColumnFilters(s => s.filter(x => x.value !== i.value))} />
-                  </Tag>
-                ))}
               </Flex>
             </Box>
             <Box>

@@ -1,6 +1,7 @@
 import React, { ReactElement, useEffect, useState } from "react"
 
 import Head from 'next/head'
+import { GetServerSideProps } from "next"
 import { Alert, AlertDescription, AlertIcon, AlertTitle, Badge, Box, Button, chakra, Flex, FormControl, FormErrorMessage, FormLabel, Grid, GridItem, Heading, Input, InputGroup, InputLeftAddon, InputRightElement, List, ListItem, Select, Tab, TabList, TabPanel, TabPanels, Tabs, Text, Textarea } from '@chakra-ui/react'
 import { useColorModeValue } from '@chakra-ui/react'
 
@@ -8,6 +9,25 @@ import DashboardLayout from "../../component/layout/DashboardLayout"
 import { MemberState } from "../../utils/interface"
 import { RoleData } from "../../data/RoleData"
 import axios from "axios"
+import { getSession } from "next-auth/react"
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const session = await getSession(context);
+
+  if (!session) {
+    return {
+      redirect: {
+        destination: '/auth',
+        permanent: false
+      }
+    }
+  }
+  return {
+    props: {
+      session: session,
+    },
+  }
+}
 
 const AddMemberPage = () => {
   const bg = useColorModeValue('gray.50', 'gray.800');
@@ -27,6 +47,7 @@ const AddMemberPage = () => {
     role: 2,
     _id: '',
     _lastUpdate: DateNow.toISOString(),
+    _createdAt: DateNow.toISOString()
   }
   const [memberData, setMemberData] = useState<MemberState>(initialMemberData)
   const [confPass, setConfPass] = useState({ pass: '', confpass: '', same: false })

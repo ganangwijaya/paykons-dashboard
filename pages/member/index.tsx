@@ -2,6 +2,7 @@ import { ReactElement, useEffect, useMemo, useState } from "react"
 
 import Head from 'next/head'
 import axios from 'axios'
+import { GetServerSideProps } from "next"
 
 import { Badge, Box, Button, ButtonGroup, Flex, Grid, GridItem, Heading, IconButton, Menu, MenuButton, MenuDivider, MenuItemOption, MenuList, MenuOptionGroup, Select, Stack, TableContainer, Text } from '@chakra-ui/react'
 import { Table, Thead, Tbody, Tr, Th, Td, chakra } from '@chakra-ui/react'
@@ -16,6 +17,25 @@ import { MemberMenuComponent } from "../../component/table/MemberDataMenu"
 import { HideData } from "../../component/table/HiddenData"
 import { CondensedCard } from "../../component/Card"
 import Link from "next/link"
+import { getSession } from "next-auth/react"
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const session = await getSession(context);
+
+  if (!session) {
+    return {
+      redirect: {
+        destination: '/auth',
+        permanent: false
+      }
+    }
+  }
+  return {
+    props: {
+      session: session,
+    },
+  }
+}
 
 const MemberPage = () => {
   const bg = useColorModeValue('gray.50', 'gray.800');

@@ -1,6 +1,7 @@
 import { ApexOptions } from "apexcharts"
+import { useEffect, useState } from "react";
 import theme from "../styles/theme";
-import { BalanceState } from "../utils/interface";
+import { BalanceState, MemberPayoutState } from "../utils/interface";
 
 export const BalancesCharts = (data: BalanceState[]) => {
   const CashFlowChartData: ApexOptions = {
@@ -144,63 +145,91 @@ export const BalancesCharts = (data: BalanceState[]) => {
   return [CashFlowChartData, BalancesChartData]
 }
 
-export const MemberChartData: ApexOptions = {
-  series: [18, 4, 12],
-  chart: {
-    id: "member",
-    toolbar: {
-      show: false
-    },
-    type: 'donut',
-    fontFamily: 'Inter, sans-serif',
-  },
-  legend: {
-    position: 'bottom',
-    horizontalAlign: 'center',
-    labels: {
-      useSeriesColors: true,
-    },
-    markers: {
-      width: 8,
-      height: 8,
-      radius: 8,
-      offsetX: -4,
-      offsetY: 0
-    },
-  },
-  colors: [theme.colors.chartBlue, '#718096', theme.colors.chartRed],
-  labels: ['Confirmed', 'Unconfirmed', 'Hasn’t paid yet'],
-  dataLabels: {
-    enabled: false
-  },
-  tooltip: {
-    theme: 'dark',
-  },
-  stroke: {
-    colors: ['transparent'],
-  },
-  plotOptions: {
-    pie: {
-      donut: {
-        labels: {
-          show: true,
-          name: {
-            show: true,
-            offsetY: 22,
+export const PayoutCharts = (data: MemberPayoutState | undefined) => {
+  const [MemberPayoutChartData, setMemberPayoutChartData] = useState<ApexOptions>()
+  const [payoutDataCount, setPayoutDataCount] = useState({ confirmed: 0, unconfirmed: 0 })
+
+  useEffect(() => {
+    if (data !== undefined) {
+      data.paid.map((i) => {
+        if (i.confirmedPayout > 0) {
+          setPayoutDataCount(d => ({ ...d, confirmed: d.confirmed + 1 }))
+        } else if (i.unconfirmedPayout > 0) {
+          setPayoutDataCount(d => ({ ...d, unconfirmed: d.unconfirmed + 1 }))
+        }
+      })
+    }
+    return () => { }
+  }, [data])
+
+  useEffect(() => {
+    if (data !== undefined) {
+      setMemberPayoutChartData(d => ({
+        ...d,
+        series: [payoutDataCount.confirmed, payoutDataCount.unconfirmed, data.notPaid.length],
+        chart: {
+          id: "member",
+          toolbar: {
+            show: false
           },
-          value: {
-            fontSize: '2.5rem',
-            fontWeight: 'bold',
-            color: '#FFF',
-            offsetY: -15,
+          type: 'donut',
+          fontFamily: 'Inter, sans-serif',
+        },
+        legend: {
+          position: 'bottom',
+          horizontalAlign: 'center',
+          labels: {
+            useSeriesColors: true,
           },
-          total: {
-            fontSize: '1rem',
-            fontWeight: 600,
-            show: true,
+          markers: {
+            width: 8,
+            height: 8,
+            radius: 8,
+            offsetX: -4,
+            offsetY: 0
+          },
+        },
+        colors: [theme.colors.chartBlue, '#A0AEC0', theme.colors.chartRed],
+        labels: ['Confirmed', 'Unconfirmed', 'Hasn’t paid yet'],
+        dataLabels: {
+          enabled: false
+        },
+        tooltip: {
+          theme: 'dark',
+        },
+        stroke: {
+          colors: ['transparent'],
+        },
+        plotOptions: {
+          pie: {
+            donut: {
+              labels: {
+                show: true,
+                name: {
+                  show: true,
+                  offsetY: 22,
+                },
+                value: {
+                  fontSize: '2.5rem',
+                  fontWeight: 'bold',
+                  color: '#FFF',
+                  offsetY: -15,
+                },
+                total: {
+                  fontSize: '1rem',
+                  fontWeight: 600,
+                  show: true,
+                }
+              }
+            }
           }
         }
-      }
+      }));
     }
-  }
+
+    return () => { }
+  }, [payoutDataCount])
+
+
+  return [MemberPayoutChartData]
 }

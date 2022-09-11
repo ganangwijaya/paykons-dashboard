@@ -2,6 +2,7 @@ import { ReactElement, useEffect, useMemo, useState } from "react"
 
 import Head from 'next/head'
 import { useRouter } from "next/router"
+import { GetServerSideProps } from "next"
 
 import { Badge, Box, Button, ButtonGroup, Flex, Grid, GridItem, Heading, IconButton, Menu, MenuButton, MenuDivider, MenuItemOption, MenuList, MenuOptionGroup, Popover, PopoverArrow, PopoverBody, PopoverCloseButton, PopoverContent, PopoverFooter, PopoverHeader, PopoverTrigger, Select, Stack, TableContainer, Tag, TagCloseButton, TagLabel, Text, useToast } from '@chakra-ui/react'
 import { Table, Thead, Tbody, Tr, Th, Td, chakra } from '@chakra-ui/react'
@@ -12,21 +13,37 @@ import DashboardLayout from "../../component/layout/DashboardLayout"
 import { DebouncedInput, Filter } from "../../component/table/FormFilter"
 
 import { PayoutState } from "../../utils/interface"
-import { MemberData } from "../../data/MemberData"
 import { AddDataPayoutModal, PayoutMenuComponent } from "../../component/table/PayoutDataMenu"
 import axios from "axios"
-import { useSession } from "next-auth/react"
+import { getSession, useSession } from "next-auth/react"
 import { ConfirmPayout, DeletePayout, EditPayout } from "../../utils/handler"
+import { CondensedCard } from "../../component/Card"
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const session = await getSession(context);
+
+  if (!session) {
+    return {
+      redirect: {
+        destination: '/auth',
+        permanent: false
+      }
+    }
+  }
+  return {
+    props: {
+      session: session,
+    },
+  }
+}
 
 const PayoutPage = () => {
   const { data: session } = useSession();
   const router = useRouter()
 
   const bg = useColorModeValue('gray.50', 'gray.800');
-  const iconBG = useColorModeValue('blue.500', 'blue.400');
   const iconColor = useColorModeValue('gray.100', 'gray.100');
-  const increaseColor = useColorModeValue('green.500', 'green.400');
-  const decreaseColor = useColorModeValue('red.500', 'red.400');
+
   const toast = useToast()
 
   const [payout, setPayout] = useState<PayoutState[]>([])
@@ -283,34 +300,10 @@ const PayoutPage = () => {
     <Stack mt={4} gap={2}>
       <Grid templateColumns={'repeat(4, 1fr)'} gap={4}>
         <GridItem colSpan={{ base: 4, md: 2, lg: 1 }} minW={0}>
-          <Flex p={4} bg={bg} rounded={'xl'} gap={4} alignItems={'center'}>
-            <Flex minW={10} w={10} h={10} bg={iconBG} color={iconColor} justifyContent={'center'} alignItems={'center'} rounded={'full'} fontSize={'xl'}><i className="ri-wallet-3-fill"></i></Flex>
-            <Box>
-              <Text fontSize={'xs'}>Total Amount</Text>
-              <Flex gap={1} alignItems={'flex-end'}>
-                <Heading as={'h4'} size={'md'}>{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, notation: 'standard' }).format(totalamount)}</Heading>
-                <Flex fontSize={10} color={increaseColor} alignItems={'center'}>
-                  <i className="ri-arrow-up-s-fill"></i>
-                  <Text fontWeight={'bold'}>10%</Text>
-                </Flex>
-              </Flex>
-            </Box>
-          </Flex>
+          <CondensedCard name={'Total Amount'} data={new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, notation: 'standard' }).format(totalamount)} icon={'ri-wallet-3-fill'} />
         </GridItem>
         <GridItem colSpan={{ base: 4, md: 2, lg: 1 }} minW={0}>
-          <Flex p={4} bg={bg} rounded={'xl'} gap={4} alignItems={'center'}>
-            <Flex minW={10} w={10} h={10} bg={iconBG} color={iconColor} justifyContent={'center'} alignItems={'center'} rounded={'full'} fontSize={'xl'}><i className="ri-file-list-3-fill"></i></Flex>
-            <Box>
-              <Text fontSize={'xs'}>Total Data</Text>
-              <Flex gap={1} alignItems={'flex-end'}>
-                <Heading as={'h4'} size={'md'}>{totalData}</Heading>
-                <Flex fontSize={10} color={increaseColor} alignItems={'center'}>
-                  <i className="ri-arrow-up-s-fill"></i>
-                  <Text fontWeight={'bold'}>10%</Text>
-                </Flex>
-              </Flex>
-            </Box>
-          </Flex>
+          <CondensedCard name={'Total Data'} data={payout.length} icon={'ri-file-list-3-fill'} />
         </GridItem>
         <GridItem colSpan={{ base: 4, md: 2, lg: 1 }} minW={0}>
           <Flex cursor={'pointer'} onClick={() => setColumnFilters([{ id: 'status', value: 'confirmed' }])} p={4} bg={bg} boxShadow={columnFilters.length > 0 ? columnFilters[0].value == 'confirmed' ? 'darkGreen' : 'green' : 'green'} _hover={{ boxShadow: 'darkGreen' }} transition={'all 0.3s ease-in-out'} rounded={'xl'} gap={4} alignItems={'center'}>
@@ -318,7 +311,7 @@ const PayoutPage = () => {
             <Box>
               <Text fontSize={'xs'}>Total Confirmed</Text>
               <Flex gap={1} alignItems={'flex-end'}>
-                <Heading as={'h4'} size={'md'}>{totalConfirmed}</Heading>
+                <Heading as={'h4'} size={'md'}>{payout.filter(f => f.status == "confirmed").length}</Heading>
               </Flex>
             </Box>
           </Flex>
@@ -329,7 +322,7 @@ const PayoutPage = () => {
             <Box>
               <Text fontSize={'xs'}>Total Unconfirmed</Text>
               <Flex gap={1} alignItems={'flex-end'}>
-                <Heading as={'h4'} size={'md'}>{totalUnconfirmed}</Heading>
+                <Heading as={'h4'} size={'md'}>{payout.filter(f => f.status == "unconfirmed").length}</Heading>
               </Flex>
             </Box>
           </Flex>
@@ -342,18 +335,6 @@ const PayoutPage = () => {
               <Heading as={'h4'} size={'md'}>Payout Data</Heading>
               <Text mt={2} fontSize={'xs'}>Payout data list by member.</Text>
               <Flex gap={2} mt={4}>
-                {columnFilters.length > 0 && columnFilters.map((i, x) => (
-                  <Tag key={x} size={'sm'}>
-                    <TagLabel>
-                      {i.id == 'memberID' ?
-                        <>{MemberData.filter(f => f.id == i.value)[0].name}</>
-                        :
-                        <>{String(i.value)}</>
-                      }
-                    </TagLabel>
-                    <TagCloseButton onClick={() => setColumnFilters(s => s.filter(x => x.value !== i.value))} />
-                  </Tag>
-                ))}
               </Flex>
             </Box>
             <Box>
